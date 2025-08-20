@@ -94,6 +94,19 @@ rm -rf ios/.symlinks > /dev/null 2>&1 || true
 # Firebase Setup for iOS Push Notifications - MOVED TO AFTER CUSTOMIZATION
 log_info "🔥 Firebase setup will be configured after app customization..."
 
+# Fix iOS App Icons (Remove transparency/alpha channel issues)
+log_info "🎨 Fixing iOS app icons to remove transparency and alpha channel issues..."
+if [[ -f "lib/scripts/ios-workflow/fix_app_icons.sh" ]]; then
+    chmod +x "lib/scripts/ios-workflow/fix_app_icons.sh"
+    if bash "lib/scripts/ios-workflow/fix_app_icons.sh"; then
+        log_success "✅ App icons fixed successfully"
+    else
+        log_warning "⚠️ App icon fix failed, continuing with build..."
+    fi
+else
+    log_warning "⚠️ App icon fix script not found, continuing with build..."
+fi
+
 # Initialize keychain using Codemagic CLI
 echo "🔐 Initialize keychain to be used for codesigning using Codemagic CLI 'keychain' command"
 keychain initialize
