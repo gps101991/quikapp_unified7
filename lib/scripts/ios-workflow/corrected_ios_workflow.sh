@@ -339,6 +339,23 @@ else
     log_success "Found $IDENTITY_COUNT valid iPhone Distribution identity(ies) in keychain."
 fi
 
+# Step 11.5: iOS Icon Fix (CRITICAL for App Store validation)
+echo "🖼️ Step 11.5: iOS Icon Fix for App Store Validation..."
+
+# Fix iOS icons to prevent upload failures
+log_info "Fixing iOS icons to prevent App Store validation errors..."
+if [ -f "lib/scripts/ios-workflow/fix_ios_workflow_icons.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/fix_ios_workflow_icons.sh
+    if ./lib/scripts/ios-workflow/fix_ios_workflow_icons.sh; then
+        log_success "✅ iOS icon fix completed successfully"
+        log_info "📱 App should now pass App Store icon validation"
+    else
+        log_warning "⚠️ iOS icon fix failed, continuing anyway"
+    fi
+else
+    log_warning "⚠️ iOS icon fix script not found, skipping icon validation"
+fi
+
 # Configure iOS permissions
 log_info "Configuring iOS permissions..."
 if [ -f "lib/scripts/ios-workflow/permissions.sh" ]; then
