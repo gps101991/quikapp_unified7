@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import '../config/environment.dart';
-import '../config/build_config.dart';
 import 'firebase_service.dart';
 import 'notification_service.dart';
 import 'connectivity_service.dart';
@@ -18,7 +17,7 @@ class ServiceFactory {
   // Service instances
   late final ConnectivityService _connectivityService;
   ConditionalFirebaseService? _firebaseService;
-  dynamic? _notificationService;
+  dynamic _notificationService;
   OAuthService? _oauthService;
 
   // Service status tracking
@@ -207,11 +206,15 @@ class ServiceFactory {
   bool get allRequiredServicesAvailable {
     final requiredServices = <String>['connectivity'];
 
-    if (Environment.pushNotify) requiredServices.add('firebase');
-    if (Environment.pushNotify && Environment.isNotification)
+    if (Environment.pushNotify) {
+      requiredServices.add('firebase');
+    }
+    if (Environment.pushNotify && Environment.isNotification) {
       requiredServices.add('notifications');
-    if (Environment.isGoogleAuth || Environment.isAppleAuth)
+    }
+    if (Environment.isGoogleAuth || Environment.isAppleAuth) {
       requiredServices.add('oauth');
+    }
 
     return requiredServices.every((service) => _serviceStatus[service] == true);
   }

@@ -1,8 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'services/firebase_service.dart';
 import 'services/connectivity_service.dart';
 import 'services/notification_service.dart';
@@ -130,74 +127,24 @@ Future<void> initializeApp() async {
   }
 }
 
-/// 🌐 Initialize connectivity service with error handling
+/// 🌐 Initialize connectivity service with proper error handling
 Future<void> _initializeConnectivity() async {
   try {
     debugPrint('🌐 Initializing connectivity service...');
     await ConnectivityService().initialize();
     debugPrint('✅ Connectivity service initialized');
-
-    // Force connectivity refresh for reliability
-    await ConnectivityService().refreshConnectivity();
-    debugPrint('✅ Connectivity refresh completed');
   } catch (e) {
-    debugPrint('⚠️ Connectivity service initialization failed: $e');
+    debugPrint('⚠️ Connectivity initialization error: $e');
     debugPrint('🔄 Continuing without connectivity service...');
-
-    // Set default connectivity state
-    try {
-      final connectivityService = ConnectivityService();
-      await connectivityService.refreshConnectivity();
-      debugPrint('✅ Forced connectivity refresh completed');
-    } catch (refreshError) {
-      debugPrint('❌ Connectivity refresh also failed: $refreshError');
-    }
   }
 }
 
-/// 🔥 Initialize Firebase with platform-specific configuration
+/// 🔥 Initialize Firebase with proper error handling
 Future<void> _initializeFirebase() async {
   try {
     debugPrint('🔥 Initializing Firebase...');
-
-    // Get platform-specific Firebase configuration
-    final platformConfig = Environment.platformConfig;
-    final firebaseConfig = platformConfig['firebaseConfig'] as String;
-
-    if (firebaseConfig.isEmpty) {
-      debugPrint(
-          '⚠️ No Firebase configuration available for platform: ${platformConfig['platform']}');
-      return;
-    }
-
-    debugPrint('📱 Platform: ${platformConfig['platform']}');
-    debugPrint('🔥 Firebase config: $firebaseConfig');
-
-    // Check Firebase service status
-    final firebaseStatus = ConditionalFirebaseService.getStatus();
-    debugPrint('   - Required: ${firebaseStatus['isRequired']}');
-    debugPrint('   - Config Available: ${firebaseStatus['isConfigAvailable']}');
-    debugPrint('   - Should Initialize: ${firebaseStatus['shouldInitialize']}');
-
-    if (firebaseStatus['shouldInitialize'] == true) {
-      final success =
-          await ConditionalFirebaseService.initializeConditionally();
-      if (success) {
-        debugPrint('✅ Firebase initialized successfully');
-
-        // Verify Firebase availability
-        final isAvailable = ConditionalFirebaseService.isFirebaseAvailableSafe;
-        final appsCount = ConditionalFirebaseService.getStatus()['appsCount'];
-        debugPrint('   - Firebase available: $isAvailable');
-        debugPrint('   - Apps count: $appsCount');
-      } else {
-        debugPrint('❌ Firebase initialization failed');
-        debugPrint('🔄 Continuing without Firebase...');
-      }
-    } else {
-      debugPrint('⚠️ Firebase not required or config not available');
-      debugPrint('🔄 Continuing without Firebase...');
-    }
+    await ConditionalFirebaseService.initializeConditionally();
+    debugPrint('✅ Firebase initialized successfully');
   } catch (e) {
     debugPrint('⚠️ Firebase initialization error: $e');
     debugPrint('🔄 Continuing without Firebase...');
@@ -236,63 +183,4 @@ Future<void> _initializeNotifications() async {
         '❌ Notification service initialization failed: $notificationError');
     debugPrint('🔄 Continuing without notification services...');
   }
-}
-
-/// 🎯 Platform-specific configuration validation
-void _validatePlatformConfiguration() {
-  final platformConfig = Environment.platformConfig;
-  final platform = platformConfig['platform'] as String;
-
-  debugPrint('🔍 Validating platform configuration for: $platform');
-
-  switch (platform) {
-    case 'android':
-      if (Environment.packageName.isEmpty) {
-        debugPrint('⚠️ Warning: PKG_NAME not set for Android');
-      }
-      if (Environment.firebaseConfigAndroid.isEmpty) {
-        debugPrint('⚠️ Warning: FIREBASE_CONFIG_ANDROID not set for Android');
-      }
-      break;
-
-    case 'ios':
-      if (Environment.bundleId.isEmpty) {
-        debugPrint('⚠️ Warning: BUNDLE_ID not set for iOS');
-      }
-      if (Environment.firebaseConfigIos.isEmpty) {
-        debugPrint('⚠️ Warning: FIREBASE_CONFIG_IOS not set for iOS');
-      }
-      break;
-
-    case 'web':
-      if (Environment.firebaseConfigAndroid.isEmpty) {
-        debugPrint('⚠️ Warning: FIREBASE_CONFIG_ANDROID not set for web');
-      }
-      break;
-
-    default:
-      debugPrint('⚠️ Warning: Unknown platform: $platform');
-  }
-}
-
-/// 📊 Log build information for debugging
-void _logBuildInformation() {
-  debugPrint('📊 Build Information:');
-  debugPrint('   - Workflow: ${Environment.workflowId}');
-  debugPrint('   - Build ID: ${Environment.buildId}');
-  debugPrint('   - Branch: ${Environment.branch}');
-  debugPrint('   - Commit: ${Environment.commitHash}');
-  debugPrint(
-      '   - Environment: ${Environment.isProduction ? 'Production' : 'Development'}');
-  debugPrint('   - Platform: ${Environment.platformConfig['platform']}');
-
-  // Log feature flags
-  debugPrint('🎯 Feature Flags:');
-  debugPrint('   - Push Notifications: ${Environment.pushNotify}');
-  debugPrint('   - Chatbot: ${Environment.isChatbot}');
-  debugPrint('   - Domain URL: ${Environment.isDomainUrl}');
-  debugPrint('   - Splash Screen: ${Environment.isSplash}');
-  debugPrint('   - Bottom Menu: ${Environment.isBottomMenu}');
-  debugPrint('   - Google Auth: ${Environment.isGoogleAuth}');
-  debugPrint('   - Apple Auth: ${Environment.isAppleAuth}');
 }

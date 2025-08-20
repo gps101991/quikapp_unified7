@@ -1,0 +1,167 @@
+---
+alwaysApply: true
+---
+rule: |
+  ❌ Do NOT hardcode any of the following variables in codemagic.yaml or in any scripts referenced by codemagic.yaml for Android or iOS workflows.
+  ✅ All values for these variables must be injected via environment variables, Codemagic secrets, or external configuration files, and referenced dynamically in codemagic.yaml and scripts.
+
+  Android variables (must NOT be hardcoded):
+    PROJECT_ID
+    APP_NAME
+    VERSION_NAME
+    VERSION_CODE
+    WORKFLOW_ID
+    LOGO_URL
+    SPLASH_URL
+    SPLASH_BG_URL
+    SPLASH_BG_COLOR
+    SPLASH_TAGLINE
+    SPLASH_TAGLINE_COLOR
+    SPLASH_TAGLINE_FONT
+    SPLASH_TAGLINE_SIZE
+    SPLASH_TAGLINE_BOLD
+    SPLASH_TAGLINE_ITALIC
+    SPLASH_ANIMATION
+    SPLASH_DURATION
+    PUSH_NOTIFY
+    FIREBASE_CONFIG_ANDROID
+    USER_NAME
+    APP_ID
+    ORG_NAME
+    WEB_URL
+    PKG_NAME
+    EMAIL_ID
+    IS_CHATBOT
+    IS_DOMAIN_URL
+    IS_SPLASH
+    IS_PULLDOWN
+    IS_BOTTOMMENU
+    IS_LOAD_IND
+    IS_GOOGLE_AUTH
+    IS_APPLE_AUTH
+    APPLE_TEAM_ID
+    IS_CAMERA
+    IS_LOCATION
+    IS_MIC
+    IS_NOTIFICATION
+    IS_CONTACT
+    IS_BIOMETRIC
+    IS_CALENDAR
+    IS_STORAGE
+    BOTTOMMENU_ITEMS
+    BOTTOMMENU_BG_COLOR
+    BOTTOMMENU_ICON_COLOR
+    BOTTOMMENU_TEXT_COLOR
+    BOTTOMMENU_FONT
+    BOTTOMMENU_FONT_SIZE
+    BOTTOMMENU_FONT_BOLD
+    BOTTOMMENU_FONT_ITALIC
+    BOTTOMMENU_ACTIVE_TAB_COLOR
+    BOTTOMMENU_ICON_POSITION
+    KEY_STORE_URL
+    CM_KEYSTORE_PASSWORD
+    CM_KEY_ALIAS
+    CM_KEY_PASSWORD
+    ENABLE_EMAIL_NOTIFICATIONS
+    EMAIL_SMTP_SERVER
+    EMAIL_SMTP_PORT
+    EMAIL_SMTP_USER
+    EMAIL_SMTP_PASS
+
+  iOS variables (must NOT be hardcoded):
+    PROJECT_ID
+    APP_NAME
+    VERSION_NAME
+    VERSION_CODE
+    BUNDLE_ID
+    APPLE_TEAM_ID
+    CERT_TYPE
+    CERT_P12_URL
+    CERT_PASSWORD
+    CERT_KEY_URL
+    CERT_CER_URL
+    PROFILE_URL
+    PROFILE_TYPE
+    WORKFLOW_ID
+    IS_TESTFLIGHT
+    UPLOAD_TO_APP_STORE
+    APP_STORE_CONNECT_KEY_IDENTIFIER
+    APP_STORE_CONNECT_ISSUER_ID
+    APP_STORE_CONNECT_API_KEY_URL
+    LOGO_URL
+    SPLASH_URL
+    SPLASH_BG_URL
+    SPLASH_BG_COLOR
+    SPLASH_TAGLINE
+    SPLASH_TAGLINE_COLOR
+    SPLASH_TAGLINE_FONT
+    SPLASH_TAGLINE_SIZE
+    SPLASH_TAGLINE_BOLD
+    SPLASH_TAGLINE_ITALIC
+    SPLASH_ANIMATION
+    SPLASH_DURATION
+    PUSH_NOTIFY
+    FIREBASE_CONFIG_IOS
+    APNS_KEY_ID
+    APNS_AUTH_KEY_URL
+    USER_NAME
+    APP_ID
+    ORG_NAME
+    WEB_URL
+    PKG_NAME
+    EMAIL_ID
+    IS_CHATBOT
+    IS_DOMAIN_URL
+    IS_SPLASH
+    IS_PULLDOWN
+    IS_BOTTOMMENU
+    IS_LOAD_IND
+    IS_GOOGLE_AUTH
+    IS_APPLE_AUTH
+    IS_CAMERA
+    IS_LOCATION
+    IS_MIC
+    IS_NOTIFICATION
+    IS_CONTACT
+    IS_BIOMETRIC
+    IS_CALENDAR
+    IS_STORAGE
+    BOTTOMMENU_ITEMS
+    BOTTOMMENU_BG_COLOR
+    BOTTOMMENU_ICON_COLOR
+    BOTTOMMENU_TEXT_COLOR
+    BOTTOMMENU_FONT
+    BOTTOMMENU_FONT_SIZE
+    BOTTOMMENU_FONT_BOLD
+    BOTTOMMENU_FONT_ITALIC
+    BOTTOMMENU_ACTIVE_TAB_COLOR
+    BOTTOMMENU_ICON_POSITION
+    ENABLE_EMAIL_NOTIFICATIONS
+    EMAIL_SMTP_SERVER
+    EMAIL_SMTP_PORT
+    EMAIL_SMTP_USER
+    EMAIL_SMTP_PASS
+
+  Enforcement:
+    - In codemagic.yaml, always use environment variable references (e.g., $VAR or ${VAR}) for these values.
+    - In any shell or Dart scripts referenced by codemagic.yaml, always read these values from environment variables or external config files, never as hardcoded literals.
+    - If a value must be set, require it to be passed in from Codemagic UI, secrets, or environment, not written directly in the YAML or script.
+    - Review all changes to codemagic.yaml and related scripts for compliance with this rule.
+
+  Rationale:
+    - This ensures security, flexibility, and maintainability of CI/CD pipelines.
+    - Prevents accidental exposure of secrets or environment-specific configuration in source control.
+
+  Example (✅ correct):
+    environment:
+      vars:
+        APP_NAME: $APP_NAME
+        VERSION_NAME: $VERSION_NAME
+
+  Example (❌ incorrect):
+    environment:
+      vars:
+        APP_NAME: "MyCoolApp"
+        VERSION_NAME: "1.0.0"
+
+  This rule applies to all Codemagic workflows for both Android and iOS.
