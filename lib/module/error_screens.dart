@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../config/env_config.dart';
 
 /// Comprehensive error screen system for QuikApp
 class ErrorScreens {
@@ -497,7 +499,7 @@ class ErrorScreens {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: (iconColor ?? Colors.red).withValues(alpha: 0.1),
+                    color: (iconColor ?? Colors.red).withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

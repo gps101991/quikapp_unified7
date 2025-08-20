@@ -373,7 +373,7 @@ class _SplashScreenState extends State<SplashScreen>
           // Progress bar
           LinearProgressIndicator(
             value: _validationProgress,
-            backgroundColor: Colors.white.withValues(alpha: 0.3),
+            backgroundColor: Colors.white.withOpacity(0.3),
             valueColor: AlwaysStoppedAnimation<Color>(
               _hasError ? Colors.red : Colors.white,
             ),
@@ -398,7 +398,7 @@ class _SplashScreenState extends State<SplashScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.8),
+                color: Colors.red.withOpacity(0.8),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(

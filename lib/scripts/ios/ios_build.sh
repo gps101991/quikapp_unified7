@@ -94,42 +94,6 @@ rm -rf ios/.symlinks > /dev/null 2>&1 || true
 # Firebase Setup for iOS Push Notifications - MOVED TO AFTER CUSTOMIZATION
 log_info "🔥 Firebase setup will be configured after app customization..."
 
-# Fix iOS App Icons (Remove transparency/alpha channel issues)
-log_info "🎨 Fixing iOS app icons to remove transparency and alpha channel issues..."
-if [[ -f "lib/scripts/ios-workflow/fix_app_icons.sh" ]]; then
-    chmod +x "lib/scripts/ios-workflow/fix_app_icons.sh"
-    if bash "lib/scripts/ios-workflow/fix_app_icons.sh"; then
-        log_success "✅ App icons fixed successfully"
-    else
-        log_warning "⚠️ App icon fix failed, continuing with build..."
-    fi
-else
-    log_warning "⚠️ App icon fix script not found, continuing with build..."
-fi
-
-# Generate Dart Environment Configuration from Workflow Variables
-log_info "📝 Generating Dart environment configuration from workflow variables..."
-if [[ -f "lib/scripts/ios-workflow/generate_dart_env.sh" ]]; then
-    chmod +x "lib/scripts/ios-workflow/generate_dart_env.sh"
-    if bash "lib/scripts/ios-workflow/generate_dart_env.sh"; then
-        log_success "✅ Dart environment configuration generated successfully"
-        
-        # Validate the generated Dart file
-        if flutter analyze lib/config/environment.dart >/dev/null 2>&1; then
-            log_success "✅ Generated environment.dart is valid"
-        else
-            log_warning "⚠️ Generated environment.dart has syntax issues"
-            flutter analyze lib/config/environment.dart 2>&1 | head -10
-        fi
-    else
-        log_error "❌ Dart environment generation failed"
-        log_warning "🔄 Continuing with build using existing environment configuration..."
-    fi
-else
-    log_warning "⚠️ Dart environment generation script not found"
-    log_warning "🔄 Continuing with build using existing environment configuration..."
-fi
-
 # Initialize keychain using Codemagic CLI
 echo "🔐 Initialize keychain to be used for codesigning using Codemagic CLI 'keychain' command"
 keychain initialize
@@ -1589,67 +1553,10 @@ else
 fi
 
 # Build
-log_info "📱 Building Flutter iOS app in release mode with environment variables..."
+log_info "📱 Building Flutter iOS app in release mode..."
 flutter build ios --release --no-codesign \
     --build-name="$VERSION_NAME" \
     --build-number="$VERSION_CODE" \
-    --dart-define=WORKFLOW_ID="$WORKFLOW_ID" \
-    --dart-define=PROJECT_ID="$PROJECT_ID" \
-    --dart-define=APP_NAME="$APP_NAME" \
-    --dart-define=VERSION_NAME="$VERSION_NAME" \
-    --dart-define=VERSION_CODE="$VERSION_CODE" \
-    --dart-define=BUNDLE_ID="$BUNDLE_ID" \
-    --dart-define=APPLE_TEAM_ID="$APPLE_TEAM_ID" \
-    --dart-define=USER_NAME="$USER_NAME" \
-    --dart-define=APP_ID="$APP_ID" \
-    --dart-define=ORG_NAME="$ORG_NAME" \
-    --dart-define=WEB_URL="$WEB_URL" \
-    --dart-define=PKG_NAME="$PKG_NAME" \
-    --dart-define=EMAIL_ID="$EMAIL_ID" \
-    --dart-define=PUSH_NOTIFY="$PUSH_NOTIFY" \
-    --dart-define=IS_CHATBOT="$IS_CHATBOT" \
-    --dart-define=IS_DOMAIN_URL="$IS_DOMAIN_URL" \
-    --dart-define=IS_SPLASH="$IS_SPLASH" \
-    --dart-define=IS_PULLDOWN="$IS_PULLDOWN" \
-    --dart-define=IS_BOTTOMMENU="$IS_BOTTOMMENU" \
-    --dart-define=IS_LOAD_IND="$IS_LOAD_IND" \
-    --dart-define=IS_GOOGLE_AUTH="$IS_GOOGLE_AUTH" \
-    --dart-define=IS_APPLE_AUTH="$IS_APPLE_AUTH" \
-    --dart-define=IS_CAMERA="$IS_CAMERA" \
-    --dart-define=IS_LOCATION="$IS_LOCATION" \
-    --dart-define=IS_MIC="$IS_MIC" \
-    --dart-define=IS_NOTIFICATION="$IS_NOTIFICATION" \
-    --dart-define=IS_CONTACT="$IS_CONTACT" \
-    --dart-define=IS_BIOMETRIC="$IS_BIOMETRIC" \
-    --dart-define=IS_CALENDAR="$IS_CALENDAR" \
-    --dart-define=IS_STORAGE="$IS_STORAGE" \
-    --dart-define=LOGO_URL="$LOGO_URL" \
-    --dart-define=SPLASH_URL="$SPLASH_URL" \
-    --dart-define=SPLASH_BG_URL="$SPLASH_BG_URL" \
-    --dart-define=SPLASH_BG_COLOR="$SPLASH_BG_COLOR" \
-    --dart-define=SPLASH_TAGLINE="$SPLASH_TAGLINE" \
-    --dart-define=SPLASH_TAGLINE_COLOR="$SPLASH_TAGLINE_COLOR" \
-    --dart-define=SPLASH_TAGLINE_FONT="$SPLASH_TAGLINE_FONT" \
-    --dart-define=SPLASH_TAGLINE_SIZE="$SPLASH_TAGLINE_SIZE" \
-    --dart-define=SPLASH_TAGLINE_BOLD="$SPLASH_TAGLINE_BOLD" \
-    --dart-define=SPLASH_TAGLINE_ITALIC="$SPLASH_TAGLINE_ITALIC" \
-    --dart-define=SPLASH_ANIMATION="$SPLASH_ANIMATION" \
-    --dart-define=SPLASH_DURATION="$SPLASH_DURATION" \
-    --dart-define=BOTTOMMENU_ITEMS="$BOTTOMMENU_ITEMS" \
-    --dart-define=BOTTOMMENU_BG_COLOR="$BOTTOMMENU_BG_COLOR" \
-    --dart-define=BOTTOMMENU_ICON_COLOR="$BOTTOMMENU_ICON_COLOR" \
-    --dart-define=BOTTOMMENU_TEXT_COLOR="$BOTTOMMENU_TEXT_COLOR" \
-    --dart-define=BOTTOMMENU_FONT="$BOTTOMMENU_FONT" \
-    --dart-define=BOTTOMMENU_FONT_SIZE="$BOTTOMMENU_FONT_SIZE" \
-    --dart-define=BOTTOMMENU_FONT_BOLD="$BOTTOMMENU_FONT_BOLD" \
-    --dart-define=BOTTOMMENU_FONT_ITALIC="$BOTTOMMENU_FONT_ITALIC" \
-    --dart-define=BOTTOMMENU_ACTIVE_TAB_COLOR="$BOTTOMMENU_ACTIVE_TAB_COLOR" \
-    --dart-define=BOTTOMMENU_ICON_POSITION="$BOTTOMMENU_ICON_POSITION" \
-    --dart-define=FIREBASE_CONFIG_ANDROID="$FIREBASE_CONFIG_ANDROID" \
-    --dart-define=FIREBASE_CONFIG_IOS="$FIREBASE_CONFIG_IOS" \
-    --dart-define=CM_BUILD_ID="$CM_BUILD_ID" \
-    --dart-define=BRANCH="$BRANCH" \
-    --dart-define=CM_COMMIT="$CM_COMMIT" \
     2>&1 | tee flutter_build.log
 
 # Check if Flutter build was successful
