@@ -1,0 +1,92 @@
+// Generated Android Environment Configuration
+// Generated on: Fri Aug 15 05:19:37 UTC 2025
+// Workflow: unknown
+// Platform: Android
+
+class EnvConfig {
+  // Core App Configuration
+  static const String appName = "QuikApp";
+  static const String versionName = "1.0.0";
+  static const int versionCode = 1;
+  static const String packageName = "com.example.app";
+  static const String workflowId = "unknown";
+  
+  // User & Organization
+  static const String userName = "";
+  static const String appId = "";
+  static const String orgName = "";
+  static const String webUrl = "";
+  static const String emailId = "";
+  
+  // Feature Flags
+  static const bool pushNotify = false;
+  static const bool isChatbot = false;
+  static const bool isDomainUrl = false;
+  static const bool isSplash = false;
+  static const bool isPulldown = false;
+  static const bool isBottommenu = false;
+  static const bool isLoadInd = false;
+  static const bool isLoadIndicator = false;
+  
+  // Permissions
+  static const bool isCamera = false;
+  static const bool isLocation = false;
+  static const bool isMic = false;
+  static const bool isNotification = false;
+  static const bool isContact = false;
+  static const bool isBiometric = false;
+  static const bool isCalendar = false;
+  static const bool isStorage = false;
+  
+  // UI/Branding
+  static const String logoUrl = "";
+  static const String splashUrl = "";
+  static const String splashBg = "";
+  static const String splashBgUrl = "";
+  static const String splashBgColor = "#FFFFFF";
+  static const String splashTagline = "";
+  static const String splashTaglineColor = "#000000";
+  static const String splashTaglineFont = "DM Sans";
+  static const String splashTaglineSize = "14.0";
+  static const bool splashTaglineBold = false;
+  static const bool splashTaglineItalic = false;
+  static const String splashAnimation = "none";
+  static const int splashDuration = 3;
+
+  // Bottom Menu Configuration
+  static const String bottommenuItems = """[]""";
+  static const String bottommenuBgColor = "#FFFFFF";
+  static const String bottommenuIconColor = "#000000";
+  static const String bottommenuTextColor = "#000000";
+  static const String bottommenuFont = "DM Sans";
+  static const double bottommenuFontSize = 14.0;
+  static const bool bottommenuFontBold = false;
+  static const bool bottommenuFontItalic = false;
+  static const String bottommenuActiveTabColor = "#0000FF";
+  static const String bottommenuIconPosition = "top";
+  static const String bottommenuVisibleOn = "";
+
+  // Firebase Configuration (Android only)
+  static const String firebaseConfigAndroid = "";
+  static const String firebaseConfigIos = "";
+
+  // Android Signing
+  static const String keyStoreUrl = "";
+  static const String cmKeystorePassword = "";
+  static const String cmKeyAlias = "";
+  static const String cmKeyPassword = "";
+
+  // Build Environment
+  static const String buildId = "unknown";
+  static const String buildDir = "";
+  static const String projectRoot = "";
+  static const String outputDir = "output";
+
+  // Utility Methods
+  static bool get isAndroidBuild => true;
+  static bool get isIosBuild => false;
+  static bool get isCombinedBuild => false;
+  static bool get hasFirebase => firebaseConfigAndroid.isNotEmpty;
+  static bool get hasKeystore => keyStoreUrl.isNotEmpty;
+  static bool get hasIosSigning => false;
+}
