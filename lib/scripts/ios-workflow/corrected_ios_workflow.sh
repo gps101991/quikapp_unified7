@@ -89,7 +89,7 @@ if [ -f "lib/scripts/utils/gen_env_config.sh" ]; then
         
         # Show generated config summary
         log_info "📋 Generated Config Summary:"
-        log_info "   App: ${APP_NAME:-QuikApp} v${VERSION_NAME:-1.0.0}"
+        log_info "   App: ${APP_NAME} v${VERSION_NAME}"
         log_info "   Workflow: ${WORKFLOW_ID:-unknown}"
         log_info "   Bundle ID: ${BUNDLE_ID:-not_set}"
         log_info "   Firebase: ${PUSH_NOTIFY:-false}"
@@ -121,7 +121,7 @@ if [[ -n "$BUNDLE_ID" ]]; then
     log_info "Updating bundle identifier to: $BUNDLE_ID"
     
     # List of possible default bundle IDs to replace
-    DEFAULT_BUNDLE_IDS=("com.example.sampleprojects.sampleProject" "com.test.app" "com.example.quikapp")
+    DEFAULT_BUNDLE_IDS=("com.example.sampleprojects.sampleProject" "com.test.app" "com.example.quikapp" "com.example.quikappflutter")
     
     for OLD_BUNDLE_ID in "${DEFAULT_BUNDLE_IDS[@]}"; do
         log_info "Replacing $OLD_BUNDLE_ID with $BUNDLE_ID"
@@ -355,7 +355,7 @@ elif [[ -n "$CERT_CER_URL" && -n "$CERT_KEY_URL" ]]; then
     log_success "Generated P12 from CER/KEY files"
     
     # Add certificate to keychain using Codemagic CLI
-    keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "${CERT_PASSWORD:-quikapp2025}"
+    keychain add-certificates --certificate /tmp/certificate.p12 --certificate-password "${CERT_PASSWORD}"
     log_success "Certificate added to keychain using Codemagic CLI"
 else
     log_warning "No certificate configuration provided"

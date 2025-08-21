@@ -53,7 +53,7 @@ IS_STORAGE=$(get_env_var "IS_STORAGE" "false")
 IS_CHATBOT=$(get_env_var "IS_CHATBOT" "false")
 
 # Get app name for permission descriptions
-APP_NAME=$(get_env_var "APP_NAME" "QuikApp")
+APP_NAME=$(get_env_var "APP_NAME" "")
 
 log_info "Permission flags:"
 log_info "  Camera: $IS_CAMERA"

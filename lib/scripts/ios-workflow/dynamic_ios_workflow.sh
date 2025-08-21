@@ -136,7 +136,7 @@ class EnvConfig {
   static const String appId = "${APP_ID:-}";
   static const String versionName = "${VERSION_NAME:-1.0.0}";
   static const int versionCode = ${VERSION_CODE:-1};
-  static const String appName = "${APP_NAME:-QuikApp}";
+  static const String appName = "${APP_NAME}";
   static const String orgName = "${ORG_NAME:-}";
   static const String webUrl = "${WEB_URL:-}";
   static const String userName = "${USER_NAME:-}";
@@ -330,7 +330,7 @@ if [[ -n "$APP_NAME" ]]; then
 fi
 
     # Replace bundle identifiers in project files
-    local default_bundle_ids=("com.example.sampleprojects.sampleProject" "com.test.app" "com.example.quikapp")
+    local default_bundle_ids=("com.example.sampleprojects.sampleProject" "com.test.app" "com.example.quikapp" "com.example.quikappflutter")
     
     for old_bundle_id in "${default_bundle_ids[@]}"; do
         find ios -name "project.pbxproj" -exec sed -i '' "s/$old_bundle_id/$BUNDLE_ID/g" {} \;

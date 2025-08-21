@@ -27,21 +27,58 @@ log_success "Asset catalog directory structure ready"
 # Step 2: Find source icon
 log_info "Step 2: Finding source icon..."
 SOURCE_ICON=""
-for icon in "$ICON_DIR"/*.png; do
-    if [[ -f "$icon" ]]; then
-        SOURCE_ICON="$icon"
-        break
-    fi
-done
 
+# Priority 1: Look for a high-quality source icon (preferably 1024x1024 or larger)
+if [[ -f "assets/images/default_logo.png" ]]; then
+    SOURCE_ICON="assets/images/default_logo.png"
+    log_info "Using default logo as source icon"
+elif [[ -f "assets/images/logo.png" ]]; then
+    SOURCE_ICON="assets/images/logo.png"
+    log_info "Using logo as source icon"
+elif [[ -f "assets/logo.png" ]]; then
+    SOURCE_ICON="assets/logo.png"
+    log_info "Using assets logo as source icon"
+fi
+
+# Priority 2: Look for any high-resolution PNG in the project (avoiding icon directory)
 if [[ -z "$SOURCE_ICON" ]]; then
-    # Try to find any PNG in the project
-    SOURCE_ICON=$(find ios -name "*.png" | head -1)
+    log_info "Searching for high-resolution source images..."
+    # Find PNGs outside the icon directory, sorted by size (largest first)
+    SOURCE_ICON=$(find . -name "*.png" -not -path "./ios/Runner/Assets.xcassets/AppIcon.appiconset/*" -not -path "./ios/Runner/Assets.xcassets/LaunchImage.imageset/*" -exec ls -la {} \; | sort -k5 -nr | head -1 | awk '{print $9}')
+    if [[ -n "$SOURCE_ICON" ]]; then
+        log_info "Found high-resolution source: $SOURCE_ICON"
+    fi
+fi
+
+# Priority 3: Look for any PNG in the project (last resort)
+if [[ -z "$SOURCE_ICON" ]]; then
+    SOURCE_ICON=$(find . -name "*.png" | head -1)
+    if [[ -n "$SOURCE_ICON" ]]; then
+        log_warning "⚠️ Using fallback source icon: $SOURCE_ICON"
+    fi
 fi
 
 if [[ -z "$SOURCE_ICON" ]]; then
     log_error "No source icon found for generation"
     exit 1
+fi
+
+# Validate source icon quality
+if command -v sips > /dev/null 2>&1; then
+    SOURCE_SIZE=$(sips -g pixelWidth -g pixelHeight "$SOURCE_ICON" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+    if [[ -n "$SOURCE_SIZE" ]]; then
+        SOURCE_WIDTH=$(echo "$SOURCE_SIZE" | cut -d'x' -f1)
+        SOURCE_HEIGHT=$(echo "$SOURCE_SIZE" | cut -d'x' -f2)
+        if [[ "$SOURCE_WIDTH" -ge 1024 ]] && [[ "$SOURCE_HEIGHT" -ge 1024 ]]; then
+            log_success "✅ Source icon has excellent resolution: $SOURCE_SIZE"
+        elif [[ "$SOURCE_WIDTH" -ge 512 ]] && [[ "$SOURCE_HEIGHT" -ge 512 ]]; then
+            log_success "✅ Source icon has good resolution: $SOURCE_SIZE"
+        elif [[ "$SOURCE_WIDTH" -ge 256 ]] && [[ "$SOURCE_HEIGHT" -ge 256 ]]; then
+            log_warning "⚠️ Source icon has moderate resolution: $SOURCE_SIZE (may affect quality)"
+        else
+            log_warning "⚠️ Source icon has low resolution: $SOURCE_SIZE (will affect quality)"
+        fi
+    fi
 fi
 
 log_success "Source icon identified: $SOURCE_ICON"
@@ -68,13 +105,105 @@ CRITICAL_ICONS=(
     "Icon-App-1024x1024@1x.png:1024x1024"
 )
 
+# Special handling for 1024x1024 icon (most critical for App Store Connect)
+ICON_1024_PATH="$ICON_DIR/Icon-App-1024x1024@1x.png"
+log_info "Ensuring 1024x1024 icon is properly generated for App Store Connect..."
+
+# Force regenerate 1024x1024 icon if it doesn't exist, is invalid, or has wrong dimensions
+NEEDS_REGENERATION=false
+
+if [[ ! -f "$ICON_1024_PATH" ]] || [[ ! -s "$ICON_1024_PATH" ]]; then
+    log_info "1024x1024 icon missing or empty, will regenerate..."
+    NEEDS_REGENERATION=true
+else
+    # Check if existing icon has correct dimensions
+    if command -v sips > /dev/null 2>&1; then
+        ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+        if [[ "$ICON_SIZE" != "1024x1024" ]]; then
+            log_warning "⚠️ 1024x1024 icon has wrong dimensions: $ICON_SIZE (expected: 1024x1024), will regenerate..."
+            NEEDS_REGENERATION=true
+        else
+            log_success "✅ 1024x1024 icon already exists with correct dimensions (1024x1024)"
+        fi
+    else
+        log_warning "⚠️ Cannot verify icon dimensions (sips not available), will regenerate to ensure correctness..."
+        NEEDS_REGENERATION=true
+    fi
+fi
+
+if [[ "$NEEDS_REGENERATION" == "true" ]]; then
+    log_info "Generating 1024x1024 icon (critical for App Store Connect)..."
+    
+    # Try sips first
+    if sips -s format png -z 1024 1024 "$SOURCE_ICON" --out "$ICON_1024_PATH" > /dev/null 2>&1; then
+        log_success "✅ 1024x1024 icon generated successfully using sips"
+    else
+        log_warning "⚠️ sips failed, trying ImageMagick..."
+        # Try ImageMagick as fallback
+        if command -v convert > /dev/null 2>&1; then
+            if convert "$SOURCE_ICON" -resize 1024x1024 "$ICON_1024_PATH" > /dev/null 2>&1; then
+                log_success "✅ 1024x1024 icon generated successfully using ImageMagick"
+            else
+                log_error "❌ Failed to generate 1024x1024 icon with ImageMagick"
+                exit 1
+            fi
+        else
+            log_error "❌ Failed to generate 1024x1024 icon - no image tools available"
+            exit 1
+        fi
+    fi
+    
+    # Verify the generated icon
+    if [[ -f "$ICON_1024_PATH" ]] && [[ -s "$ICON_1024_PATH" ]]; then
+        if command -v sips > /dev/null 2>&1; then
+            ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+            if [[ "$ICON_SIZE" == "1024x1024" ]]; then
+                log_success "✅ 1024x1024 icon validated: correct dimensions and content"
+            else
+                log_error "❌ 1024x1024 icon has wrong dimensions: $ICON_SIZE (expected: 1024x1024)"
+                exit 1
+            fi
+        else
+            log_success "✅ 1024x1024 icon generated and has content"
+        fi
+    else
+        log_error "❌ 1024x1024 icon generation failed"
+        exit 1
+    fi
+fi
+
 # Generate each icon
 for icon_info in "${CRITICAL_ICONS[@]}"; do
     icon="${icon_info%%:*}"
     size="${icon_info##*:}"
     filepath="$ICON_DIR/$icon"
     
+    NEEDS_GENERATION=false
+    
     if [[ ! -f "$filepath" ]] || [[ ! -s "$filepath" ]]; then
+        log_info "$icon missing or empty, will generate..."
+        NEEDS_GENERATION=true
+    else
+        # For critical icons, also check dimensions
+        if [[ "$icon" == "Icon-App-60x60@2x.png" ]] || [[ "$icon" == "Icon-App-76x76@2x.png" ]] || [[ "$icon" == "Icon-App-83.5x83.5@2x.png" ]]; then
+            if command -v sips > /dev/null 2>&1; then
+                ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$filepath" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+                EXPECTED_SIZE="${size%x*}x${size#*x}"
+                if [[ "$ICON_SIZE" != "$EXPECTED_SIZE" ]]; then
+                    log_warning "⚠️ $icon has wrong dimensions: $ICON_SIZE (expected: $EXPECTED_SIZE), will regenerate..."
+                    NEEDS_GENERATION=true
+                else
+                    log_success "$icon already exists with correct dimensions ($EXPECTED_SIZE)"
+                fi
+            else
+                log_success "$icon already exists"
+            fi
+        else
+            log_success "$icon already exists"
+        fi
+    fi
+    
+    if [[ "$NEEDS_GENERATION" == "true" ]]; then
         log_info "Generating $icon ($size)..."
         if sips -s format png -z "${size%x*}" "${size#*x}" "$SOURCE_ICON" --out "$filepath" > /dev/null 2>&1; then
             log_success "Generated $icon"
@@ -91,8 +220,6 @@ for icon_info in "${CRITICAL_ICONS[@]}"; do
                 log_error "Failed to generate $icon - no image tools available"
             fi
         fi
-    else
-        log_success "$icon already exists"
     fi
 done
 
@@ -207,7 +334,13 @@ cat > "$CONTENTS_JSON" << 'EOF'
       "filename" : "Icon-App-1024x1024@1x.png",
       "idiom" : "ios-marketing",
       "scale" : "1x",
-      "size" : "1024x1024"
+      "size" : "1024x1024",
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "any"
+        }
+      ]
     }
   ],
   "info" : {
@@ -258,6 +391,25 @@ for icon_info in "${CRITICAL_ICONS[@]}"; do
     fi
 done
 
+# Special validation for 1024x1024 icon (critical for App Store Connect)
+ICON_1024_PATH="$ICON_DIR/Icon-App-1024x1024@1x.png"
+if [[ ! -f "$ICON_1024_PATH" ]]; then
+    log_error "❌ CRITICAL: 1024x1024 icon missing - App Store Connect upload will fail"
+    MISSING_ICONS+=("Icon-App-1024x1024@1x.png (1024x1024)")
+elif [[ ! -s "$ICON_1024_PATH" ]]; then
+    log_error "❌ CRITICAL: 1024x1024 icon is empty - App Store Connect upload will fail"
+    EMPTY_ICONS+=("Icon-App-1024x1024@1x.png (1024x1024)")
+else
+    # Verify the icon dimensions
+    ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+    if [[ "$ICON_SIZE" == "1024x1024" ]]; then
+        log_success "✅ 1024x1024 icon validated: correct dimensions and content"
+    else
+        log_error "❌ CRITICAL: 1024x1024 icon has wrong dimensions: $ICON_SIZE (expected: 1024x1024)"
+        EMPTY_ICONS+=("Icon-App-1024x1024@1x.png (wrong dimensions: $ICON_SIZE)")
+    fi
+fi
+
 if [[ ${#MISSING_ICONS[@]} -gt 0 ]]; then
     log_error "Missing icons:"
     for icon in "${MISSING_ICONS[@]}"; do
@@ -267,7 +419,7 @@ if [[ ${#MISSING_ICONS[@]} -gt 0 ]]; then
 fi
 
 if [[ ${#EMPTY_ICONS[@]} -gt 0 ]]; then
-    log_error "Empty icons:"
+    log_error "Empty or invalid icons:"
     for icon in "${EMPTY_ICONS[@]}"; do
         log_error "  - $icon"
     done
@@ -315,6 +467,33 @@ for size in "${CRITICAL_SIZES[@]}"; do
         exit 1
     fi
 done
+
+# App Store Connect specific validation
+log_info "🔍 App Store Connect validation check..."
+log_info "Checking for 'Any Appearance' 1024x1024 icon requirement..."
+
+ICON_1024_PATH="$ICON_DIR/Icon-App-1024x1024@1x.png"
+if [[ -f "$ICON_1024_PATH" ]] && [[ -s "$ICON_1024_PATH" ]]; then
+    # Verify dimensions
+    ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+    if [[ "$ICON_SIZE" == "1024x1024" ]]; then
+        log_success "✅ 1024x1024 icon: correct dimensions (1024x1024)"
+        
+        # Check if Contents.json has proper appearances field
+        if grep -q '"appearance" : "luminosity"' "$CONTENTS_JSON"; then
+            log_success "✅ Contents.json: 'Any Appearance' field properly configured"
+            log_success "✅ App Store Connect: Should pass icon validation"
+        else
+            log_warning "⚠️ Contents.json: 'Any Appearance' field missing"
+        fi
+    else
+        log_error "❌ 1024x1024 icon: wrong dimensions ($ICON_SIZE), expected 1024x1024"
+        log_error "❌ App Store Connect: Will fail icon validation"
+    fi
+else
+    log_error "❌ 1024x1024 icon: missing or empty"
+    log_error "❌ App Store Connect: Will fail icon validation"
+fi
 
 log_success "🎉 Robust iOS icon fix completed successfully!"
 log_info "📱 App should now pass App Store Connect icon validation"

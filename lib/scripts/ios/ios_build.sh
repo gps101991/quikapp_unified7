@@ -128,7 +128,7 @@ if [[ -n "$PROFILE_URL" ]]; then
         echo "Bundle Identifier from profile: $BUNDLE_ID_FROM_PROFILE"
         
         # Use bundle ID from profile if BUNDLE_ID is not set or is default
-        if [[ -z "$BUNDLE_ID" || "$BUNDLE_ID" == "com.example.sampleprojects.sampleProject" || "$BUNDLE_ID" == "com.test.app" ]]; then
+        if [[ -z "$BUNDLE_ID" || "$BUNDLE_ID" == "com.example.sampleprojects.sampleProject" || "$BUNDLE_ID" == "com.test.app" || "$BUNDLE_ID" == "com.example.quikapp" ]]; then
             BUNDLE_ID="$BUNDLE_ID_FROM_PROFILE"
             log_info "Using bundle ID from provisioning profile: $BUNDLE_ID"
         else
@@ -460,7 +460,7 @@ if [[ -n "$BUNDLE_ID" ]]; then
     log_info "Updating bundle identifier to: $BUNDLE_ID"
     
     # List of possible default bundle IDs to replace
-    DEFAULT_BUNDLE_IDS=("com.example.sampleprojects.sampleProject" "com.test.app" "com.example.quikapp")
+    DEFAULT_BUNDLE_IDS=("com.example.sampleprojects.sampleProject" "com.test.app" "com.example.quikapp" "com.example.quikappflutter")
     
     for OLD_BUNDLE_ID in "${DEFAULT_BUNDLE_IDS[@]}"; do
         log_info "Replacing $OLD_BUNDLE_ID with $BUNDLE_ID"
@@ -1022,7 +1022,7 @@ EOF
     
     # Add NSUserNotificationUsageDescription for better permission request
     if ! /usr/libexec/PlistBuddy -c "Print :NSUserNotificationUsageDescription" ios/Runner/Info.plist >/dev/null 2>&1; then
-        NOTIFICATION_DESCRIPTION="${APP_NAME:-QuikApp} needs to send you notifications to keep you updated with important information."
+        NOTIFICATION_DESCRIPTION="${APP_NAME} needs to send you notifications to keep you updated with important information."
         /usr/libexec/PlistBuddy -c "Add :NSUserNotificationUsageDescription string '$NOTIFICATION_DESCRIPTION'" ios/Runner/Info.plist 2>/dev/null || log_warning "⚠️ Could not add NSUserNotificationUsageDescription"
         log_success "✅ Added NSUserNotificationUsageDescription for better permission request"
     else
@@ -1045,7 +1045,7 @@ EOF
     
     # Add NSUserNotificationUsageDescription for better permission request
     if ! /usr/libexec/PlistBuddy -c "Print :NSUserNotificationUsageDescription" ios/Runner/Info.plist >/dev/null 2>&1; then
-        NOTIFICATION_DESCRIPTION="${APP_NAME:-QuikApp} needs to send you notifications to keep you updated with important information."
+        NOTIFICATION_DESCRIPTION="\ needs to send you notifications to keep you updated with important information."
         /usr/libexec/PlistBuddy -c "Add :NSUserNotificationUsageDescription string '$NOTIFICATION_DESCRIPTION'" ios/Runner/Info.plist 2>/dev/null || log_warning "⚠️ Could not add NSUserNotificationUsageDescription"
         log_success "✅ Added NSUserNotificationUsageDescription for better UX"
     else
@@ -1068,7 +1068,7 @@ EOF
     
     # Add NSUserNotificationUsageDescription for modern permission request
     if ! /usr/libexec/PlistBuddy -c "Print :NSUserNotificationUsageDescription" ios/Runner/Info.plist >/dev/null 2>&1; then
-        NOTIFICATION_DESCRIPTION="${APP_NAME:-QuikApp} needs to send you notifications to keep you updated with important information."
+        NOTIFICATION_DESCRIPTION="${APP_NAME} needs to send you notifications to keep you updated with important information."
         /usr/libexec/PlistBuddy -c "Add :NSUserNotificationUsageDescription string '$NOTIFICATION_DESCRIPTION'" ios/Runner/Info.plist 2>/dev/null || log_warning "⚠️ Could not add NSUserNotificationUsageDescription"
         log_success "✅ Added NSUserNotificationUsageDescription for modern iOS permission request"
     else
@@ -1091,7 +1091,7 @@ EOF
     
     # Add NSUserNotificationUsageDescription for better permission request
     if ! /usr/libexec/PlistBuddy -c "Print :NSUserNotificationUsageDescription" ios/Runner/Info.plist >/dev/null 2>&1; then
-        NOTIFICATION_DESCRIPTION="${APP_NAME:-QuikApp} needs to send you notifications to keep you updated with important information."
+        NOTIFICATION_DESCRIPTION="\ needs to send you notifications to keep you updated with important information."
         /usr/libexec/PlistBuddy -c "Add :NSUserNotificationUsageDescription string '$NOTIFICATION_DESCRIPTION'" ios/Runner/Info.plist 2>/dev/null || log_warning "⚠️ Could not add NSUserNotificationUsageDescription"
         log_success "✅ Added NSUserNotificationUsageDescription for better UX"
     else

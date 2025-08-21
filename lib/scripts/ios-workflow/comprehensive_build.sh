@@ -5,11 +5,11 @@
 set -euo pipefail
 
 # Enhanced logging
-log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] [BUILD] $1"; }
-log_success() { echo -e "\033[0;32m✅ $1\033[0m"; }
-log_warning() { echo -e "\033[1;33m⚠️ $1\033[0m"; }
-log_error() { echo -e "\033[0;31m❌ $1\033[0m"; }
-log_info() { echo -e "\033[0;34m🔍 $1\033[0m"; }
+log() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] [BUILD] $"; }
+log_success() { echo -e "\033[0;32m✅ $\033[0m"; }
+log_warning() { echo -e "\033[;33m⚠️ $\033[0m"; }
+log_error() { echo -e "\033[0;3m❌ $\033[0m"; }
+log_info() { echo -e "\033[0;34m🔍 $\033[0m"; }
 
 # Source environment configuration
 SCRIPT_DIR="$(dirname "$0")"
@@ -25,7 +25,7 @@ fi
 
 # Function to safely get environment variable with fallback
 get_api_var() {
-    local var_name="$1"
+    local var_name="$"
     local fallback="$2"
     local value="${!var_name:-}"
     
@@ -38,11 +38,11 @@ get_api_var() {
 
 # Set default values for all required variables
 export WORKFLOW_ID=$(get_api_var "WORKFLOW_ID" "ios-workflow")
-export APP_NAME=$(get_api_var "APP_NAME" "QuikApp")
-export VERSION_NAME=$(get_api_var "VERSION_NAME" "1.0.0")
-export VERSION_CODE=$(get_api_var "VERSION_CODE" "1")
-export EMAIL_ID=$(get_api_var "EMAIL_ID" "admin@example.com")
-export BUNDLE_ID=$(get_api_var "BUNDLE_ID" "com.example.quikapp")
+export APP_NAME=$(get_api_var "APP_NAME" "")
+export VERSION_NAME=$(get_api_var "VERSION_NAME" "")
+export VERSION_CODE=$(get_api_var "VERSION_CODE" "")
+export EMAIL_ID=$(get_api_var "EMAIL_ID" "@example.com")
+export BUNDLE_ID=$(get_api_var "BUNDLE_ID" "com.example.")
 export APPLE_TEAM_ID=$(get_api_var "APPLE_TEAM_ID" "")
 export PROFILE_TYPE=$(get_api_var "PROFILE_TYPE" "app-store")
 export PROFILE_URL=$(get_api_var "PROFILE_URL" "")
@@ -61,11 +61,11 @@ export EMAIL_SMTP_SERVER=$(get_api_var "EMAIL_SMTP_SERVER" "")
 export EMAIL_SMTP_PORT=$(get_api_var "EMAIL_SMTP_PORT" "587")
 export EMAIL_SMTP_USER=$(get_api_var "EMAIL_SMTP_USER" "")
 export EMAIL_SMTP_PASS=$(get_api_var "EMAIL_SMTP_PASS" "")
-export USER_NAME=$(get_api_var "USER_NAME" "Admin")
-export APP_ID=$(get_api_var "APP_ID" "quikapp")
-export ORG_NAME=$(get_api_var "ORG_NAME" "QuikApp")
-export WEB_URL=$(get_api_var "WEB_URL" "https://quikapp.com")
-export PKG_NAME=$(get_api_var "PKG_NAME" "com.example.quikapp")
+export USER_NAME=$(get_api_var "USER_NAME" "")
+export APP_ID=$(get_api_var "APP_ID" "")
+export ORG_NAME=$(get_api_var "ORG_NAME" "")
+export WEB_URL=$(get_api_var "WEB_URL" "https://.com")
+export PKG_NAME=$(get_api_var "PKG_NAME" "com.example.")
 export PUSH_NOTIFY=$(get_api_var "PUSH_NOTIFY" "false")
 export IS_CHATBOT=$(get_api_var "IS_CHATBOT" "false")
 export IS_DOMAIN_URL=$(get_api_var "IS_DOMAIN_URL" "false")
@@ -86,8 +86,8 @@ export IS_STORAGE=$(get_api_var "IS_STORAGE" "false")
 mkdir -p output/ios
 mkdir -p build/ios/logs
 
-# Step 1: Environment Setup
-log_info "Step 1: Environment Setup"
+# Step : Environment Setup
+log_info "Step : Environment Setup"
 log "Setting up build environment..."
 
 # Generate environment configuration
@@ -97,11 +97,11 @@ if [ -f "lib/scripts/utils/gen_env_config.sh" ]; then
         log_success "Environment configuration generated successfully"
     else
         log_error "Environment configuration failed"
-        exit 1
+        exit 
     fi
 else
     log_error "Environment configuration script not found"
-    exit 1
+    exit 
 fi
 
 # Generate env.g.dart if needed
@@ -114,8 +114,8 @@ if [ -f "lib/scripts/utils/gen_env_g.sh" ]; then
     fi
 fi
 
-# Step 1.1: Inject iOS Permissions
-log_info "Step 1.1: iOS Permissions Injection"
+# Step .: Inject iOS Permissions
+log_info "Step .: iOS Permissions Injection"
 log "Injecting conditional permissions based on environment variables..."
 
 if [ -f "lib/scripts/ios-workflow/ios_permissions.sh" ]; then
@@ -210,14 +210,14 @@ log "Generating Flutter configuration files..."
 cd ios
 
 # Ensure iOS deployment target is set correctly for Firebase
-log "Setting iOS deployment target to 13.0 for Firebase compatibility..."
+log "Setting iOS deployment target to 3.0 for Firebase compatibility..."
 if [ -f "Podfile" ]; then
-    sed -i '' 's/platform :ios, '"'"'[0-9.]*'"'"'/platform :ios, '"'"'13.0'"'"'/g' Podfile
+    sed -i '' 's/platform :ios, '"'"'[0-9.]*'"'"'/platform :ios, '"'"'3.0'"'"'/g' Podfile
 fi
 
 # Update project.pbxproj deployment target
 if [ -f "Runner.xcodeproj/project.pbxproj" ]; then
-    sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/g' Runner.xcodeproj/project.pbxproj
+    sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*;/IPHONEOS_DEPLOYMENT_TARGET = 3.0;/g' Runner.xcodeproj/project.pbxproj
 fi
 
 flutter build ios --no-codesign --debug --verbose || {
@@ -237,7 +237,7 @@ if [ ! -f "Podfile" ]; then
     log_error "Podfile not found. Creating Podfile..."
     cat > Podfile << 'EOF'
 # Uncomment this line to define a global platform for your project
-platform :ios, '13.0'
+platform :ios, '3.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -256,7 +256,7 @@ def flutter_root
 
   File.foreach(generated_xcode_build_settings_path) do |line|
     matches = line.match(/FLUTTER_ROOT\=(.*)/)
-    return matches[1].strip if matches
+    return matches[].strip if matches
   end
   raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
 end
@@ -278,7 +278,7 @@ post_install do |installer|
     
     # Set minimum deployment target for all pods
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '3.0'
     end
   end
 end
@@ -296,15 +296,15 @@ if [ ! -f "Flutter/Generated.xcconfig" ]; then
     cd ios
     flutter build ios --no-codesign --debug --verbose || {
         log_error "Failed to generate Flutter configuration files"
-        exit 1
+        exit 
     }
 fi
 
 rm -rf Pods/ Podfile.lock
 pod install --repo-update
 
-# Step 6.1: Fix CwlCatchException Swift compiler error
-log_info "Step 6.1: Fixing CwlCatchException Swift compiler error"
+# Step 6.: Fix CwlCatchException Swift compiler error
+log_info "Step 6.: Fixing CwlCatchException Swift compiler error"
 if [ -f "../lib/scripts/ios-workflow/fix_cwl_catch_exception.sh" ]; then
     chmod +x ../lib/scripts/ios-workflow/fix_cwl_catch_exception.sh
     # Set build mode for the fix script
@@ -327,9 +327,9 @@ log "Configuring build settings..."
 
 # Create ExportOptions.plist with modern App Store Connect API support
 cat > ios/ExportOptions.plist <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
+<?xml version=".0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST .0//EN" "http://www.apple.com/DTDs/PropertyList-.0.dtd">
+<plist version=".0">
 <dict>
     <key>method</key>
     <string>$PROFILE_TYPE</string>
@@ -404,8 +404,8 @@ xcodebuild -workspace Runner.xcworkspace \
 
 cd ..
 
-# Step 10: Export IPA
-log_info "Step 10: Export IPA"
+# Step 0: Export IPA
+log_info "Step 0: Export IPA"
 log "Exporting IPA file..."
 
 cd ios
@@ -417,17 +417,17 @@ xcodebuild -exportArchive \
 
 cd ..
 
-# Step 11: Validate Build
-log_info "Step 11: Validate Build"
+# Step : Validate Build
+log_info "Step : Validate Build"
 log "Validating build results..."
 
 # Check if IPA was created
 IPA_FILES=$(find . -name "*.ipa" -type f 2>/dev/null || true)
 if [ -n "$IPA_FILES" ]; then
-    IPA_PATH=$(echo "$IPA_FILES" | head -1)
+    IPA_PATH=$(echo "$IPA_FILES" | head -)
     IPA_SIZE=$(stat -f%z "$IPA_PATH" 2>/dev/null || stat -c%s "$IPA_PATH" 2>/dev/null || echo "0")
     
-    if [ "$IPA_SIZE" -gt 1000000 ]; then
+    if [ "$IPA_SIZE" -gt 000000 ]; then
         log_success "IPA created successfully: $IPA_PATH ($IPA_SIZE bytes)"
         
         # Copy to output directory
@@ -435,16 +435,16 @@ if [ -n "$IPA_FILES" ]; then
         log_success "IPA copied to output/ios/Runner.ipa"
     else
         log_error "IPA file is too small ($IPA_SIZE bytes) - build may have failed"
-        exit 1
+        exit 
     fi
 else
     log_error "No IPA file found - build failed"
-    exit 1
+    exit 
 fi
 
-# Step 12: TestFlight Upload (if enabled)
+# Step 2: TestFlight Upload (if enabled)
 if [ "$IS_TESTFLIGHT" = "true" ] && [ -n "$APP_STORE_CONNECT_KEY_IDENTIFIER" ] && [ -n "$APP_STORE_CONNECT_ISSUER_ID" ] && [ -n "$APP_STORE_CONNECT_API_KEY_URL" ]; then
-    log_info "Step 12: TestFlight Upload"
+    log_info "Step 2: TestFlight Upload"
     log "Uploading to TestFlight..."
     
     # Download API key
@@ -458,19 +458,19 @@ if [ "$IS_TESTFLIGHT" = "true" ] && [ -n "$APP_STORE_CONNECT_KEY_IDENTIFIER" ] &
             log_success "TestFlight upload completed successfully"
         else
             log_error "TestFlight upload failed"
-            exit 1
+            exit 
         fi
     else
         log_error "Failed to download API key"
-        exit 1
+        exit 
     fi
 else
-    log_info "Step 12: TestFlight Upload (Skipped)"
+    log_info "Step 2: TestFlight Upload (Skipped)"
     log "TestFlight upload not enabled or missing credentials"
 fi
 
-# Step 13: Create Build Summary
-log_info "Step 13: Create Build Summary"
+# Step 3: Create Build Summary
+log_info "Step 3: Create Build Summary"
 log "Creating build summary..."
 
 cat > output/ios/ARTIFACTS_SUMMARY.txt <<EOF
