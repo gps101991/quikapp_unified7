@@ -154,7 +154,22 @@ workflows:
         script: |
             log_info "🔧 Making scripts executable..."
             chmod +x lib/scripts/ios/*.sh 2>/dev/null || log_warning "Some scripts may not be executable"
+            chmod +x lib/scripts/ios-workflow/*.sh 2>/dev/null || log_warning "Some ios-workflow scripts may not be executable"
             chmod +x lib/scripts/utils/*.sh 2>/dev/null || log_warning "Some utils scripts may not be executable"
+            
+            log_info "🎨 Setting up comprehensive iOS app icons..."
+            if [[ -f "lib/scripts/ios-workflow/comprehensive_ios_icon_setup.sh" ]]; then
+                chmod +x lib/scripts/ios-workflow/comprehensive_ios_icon_setup.sh
+                if ./lib/scripts/ios-workflow/comprehensive_ios_icon_setup.sh; then
+                    log_info "✅ Comprehensive iOS icon setup completed successfully"
+                else
+                    log_error "❌ Comprehensive iOS icon setup failed, continuing with build..."
+                fi
+            else
+                log_warning "⚠️ Comprehensive iOS icon setup script not found, continuing with build..."
+            fi
+            
+            log_info "🚀 Starting main iOS build process..."
             bash lib/scripts/ios/ios_build.sh
 
     artifacts:
