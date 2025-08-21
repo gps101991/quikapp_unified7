@@ -100,6 +100,22 @@ done
 log_info "Step 4: Creating/Updating Contents.json..."
 CONTENTS_JSON="$ICON_DIR/Contents.json"
 
+# Check if Contents.json is corrupted and fix it first
+if [[ -f "$CONTENTS_JSON" ]]; then
+    if ! plutil -lint "$CONTENTS_JSON" >/dev/null 2>&1; then
+        log_warning "⚠️ Contents.json is corrupted, fixing it first..."
+        
+        # Create backup
+        BACKUP_PATH="${CONTENTS_JSON}.backup.$(date +%Y%m%d_%H%M%S)"
+        cp "$CONTENTS_JSON" "$BACKUP_PATH"
+        log_info "Backup created: $BACKUP_PATH"
+        
+        # Remove corrupted file
+        rm "$CONTENTS_JSON"
+        log_info "Corrupted Contents.json removed"
+    fi
+fi
+
 cat > "$CONTENTS_JSON" << 'EOF'
 {
   "images" : [

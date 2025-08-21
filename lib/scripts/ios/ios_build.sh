@@ -547,8 +547,75 @@ else
     exit 1
 fi
 
-# Step 11.5: iOS Icon Fix (CRITICAL for App Store validation)
-log_info "🖼️ Step 11.5: iOS Icon Fix for App Store Validation..."
+# Step 11.5: iOS app branding (logo and splash screen) - MUST HAPPEN BEFORE ICON FIX
+log_info "🎨 Step 11.5: iOS app branding (logo and splash screen)..."
+if [ -f "lib/scripts/ios-workflow/ios_branding.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/ios_branding.sh
+    if ./lib/scripts/ios-workflow/ios_branding.sh; then
+        log_success "✅ iOS app branding completed successfully"
+    else
+        log_error "❌ Failed to complete iOS app branding"
+        log_warning "⚠️ Continuing build without custom branding..."
+    fi
+else
+    log_warning "⚠️ iOS branding script not found, skipping branding..."
+fi
+
+# Fix all iOS permissions for App Store compliance
+log_info "🔐 Step: Fix all iOS permissions for App Store compliance..."
+if [ -f "lib/scripts/ios-workflow/fix_all_permissions.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/fix_all_permissions.sh
+    if ./lib/scripts/ios-workflow/fix_all_permissions.sh; then
+        log_success "✅ All iOS permissions fixed successfully"
+    else
+        log_error "❌ Failed to fix iOS permissions"
+        log_warning "⚠️ Continuing build but permissions may not work correctly..."
+    fi
+else
+    log_warning "⚠️ All permissions fix script not found, trying speech-only fix..."
+    if [ -f "lib/scripts/ios-workflow/fix_speech_permissions.sh" ]; then
+        chmod +x lib/scripts/ios-workflow/fix_speech_permissions.sh
+        if ./lib/scripts/ios-workflow/fix_speech_permissions.sh; then
+            log_success "✅ Speech recognition permissions fixed successfully"
+        else
+            log_error "❌ Failed to fix speech recognition permissions"
+            log_warning "⚠️ Continuing build but speech permissions may not work..."
+        fi
+    else
+        log_warning "⚠️ Speech permissions fix script not found, skipping..."
+    fi
+fi
+
+# Test icon fix to verify it worked
+log_info "🧪 Testing icon fix to verify App Store validation readiness..."
+if [ -f "lib/scripts/ios-workflow/test_icon_fix.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/test_icon_fix.sh
+    if ./lib/scripts/ios-workflow/test_icon_fix.sh; then
+        log_success "✅ Icon fix test passed - App Store validation should succeed"
+    else
+        log_warning "⚠️ Icon fix test failed - App Store validation may still fail"
+        log_warning "⚠️ Check the test output above for specific issues"
+    fi
+else
+    log_warning "⚠️ Icon fix test script not found, cannot verify fix"
+fi
+
+# iOS app branding (logo and splash screen)
+log_info "🎨 Step: iOS app branding (logo and splash screen)..."
+if [ -f "lib/scripts/ios-workflow/ios_branding.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/ios_branding.sh
+    if ./lib/scripts/ios-workflow/ios_branding.sh; then
+        log_success "✅ iOS app branding completed successfully"
+    else
+        log_error "❌ Failed to complete iOS app branding"
+        log_warning "⚠️ Continuing build without custom branding..."
+    fi
+else
+    log_warning "⚠️ iOS branding script not found, skipping branding..."
+fi
+
+# Step 11.6: Robust iOS Icon Fix (CRITICAL for App Store validation) - AFTER BRANDING
+log_info "🖼️ Step 11.6: Robust iOS Icon Fix for App Store Validation..."
 
 # Fix iOS icons to prevent upload failures
 log_info "Fixing iOS icons to prevent App Store validation errors..."
@@ -586,59 +653,6 @@ else
         log_warning "⚠️ No icon fix scripts found, skipping icon validation"
         log_warning "⚠️ App may fail App Store validation due to missing icons"
     fi
-fi
-
-# Fix all iOS permissions for App Store compliance
-log_info "🔐 Step: Fix all iOS permissions for App Store compliance..."
-if [ -f "lib/scripts/ios-workflow/fix_all_permissions.sh" ]; then
-    chmod +x lib/scripts/ios-workflow/fix_all_permissions.sh
-    if ./lib/scripts/ios-workflow/fix_all_permissions.sh; then
-        log_success "✅ All iOS permissions fixed successfully"
-    else
-        log_error "❌ Failed to fix iOS permissions"
-        exit 1
-    fi
-else
-    log_warning "⚠️ All permissions fix script not found, trying speech-only fix..."
-    if [ -f "lib/scripts/ios-workflow/fix_speech_permissions.sh" ]; then
-        chmod +x lib/scripts/ios-workflow/fix_speech_permissions.sh
-        if ./lib/scripts/ios-workflow/fix_speech_permissions.sh; then
-            log_success "✅ Speech recognition permissions fixed successfully"
-        else
-            log_error "❌ Failed to fix speech recognition permissions"
-            exit 1
-        fi
-    else
-        log_warning "⚠️ Speech permissions fix script not found, skipping..."
-    fi
-fi
-
-# Test icon fix to verify it worked
-log_info "🧪 Testing icon fix to verify App Store validation readiness..."
-if [ -f "lib/scripts/ios-workflow/test_icon_fix.sh" ]; then
-    chmod +x lib/scripts/ios-workflow/test_icon_fix.sh
-    if ./lib/scripts/ios-workflow/test_icon_fix.sh; then
-        log_success "✅ Icon fix test passed - App Store validation should succeed"
-    else
-        log_warning "⚠️ Icon fix test failed - App Store validation may still fail"
-        log_warning "⚠️ Check the test output above for specific issues"
-    fi
-else
-    log_warning "⚠️ Icon fix test script not found, cannot verify fix"
-fi
-
-# iOS app branding (logo and splash screen)
-log_info "🎨 Step: iOS app branding (logo and splash screen)..."
-if [ -f "lib/scripts/ios-workflow/ios_branding.sh" ]; then
-    chmod +x lib/scripts/ios-workflow/ios_branding.sh
-    if ./lib/scripts/ios-workflow/ios_branding.sh; then
-        log_success "✅ iOS app branding completed successfully"
-    else
-        log_error "❌ Failed to complete iOS app branding"
-        log_warning "⚠️ Continuing build without custom branding..."
-    fi
-else
-    log_warning "⚠️ iOS branding script not found, skipping branding..."
 fi
 
 # Dynamic iOS app icon fix for ITMS compliance (ITMS-90022, ITMS-90023, ITMS-90713)
@@ -1642,6 +1656,93 @@ else
     log_error "❌ Environment configuration invalid after clean"
     flutter analyze lib/config/env_config.dart
     exit 1
+fi
+
+# CRITICAL: Final icon validation before build
+log_info "🔍 CRITICAL: Final icon validation before Flutter build..."
+log_info "This validation ensures App Store Connect upload will succeed..."
+
+# Check if all critical icons exist and have content
+CRITICAL_ICONS=(
+    "Icon-App-60x60@2x.png:120x120"
+    "Icon-App-76x76@2x.png:152x152"
+    "Icon-App-83.5x83.5@2x.png:167x167"
+)
+
+ICON_DIR="ios/Runner/Assets.xcassets/AppIcon.appiconset"
+MISSING_CRITICAL=()
+EMPTY_CRITICAL=()
+
+for icon_info in "${CRITICAL_ICONS[@]}"; do
+    icon="${icon_info%%:*}"
+    size="${icon_info##*:}"
+    filepath="$ICON_DIR/$icon"
+    
+    if [[ ! -f "$filepath" ]]; then
+        MISSING_CRITICAL+=("$icon ($size)")
+    elif [[ ! -s "$filepath" ]]; then
+        EMPTY_CRITICAL+=("$icon ($size)")
+    fi
+done
+
+if [[ ${#MISSING_CRITICAL[@]} -gt 0 ]]; then
+    log_error "❌ CRITICAL: Missing icons before build:"
+    for icon in "${MISSING_CRITICAL[@]}"; do
+        log_error "  - $icon"
+    done
+    log_error "❌ Build will fail App Store Connect validation"
+    log_error "❌ Running emergency icon fix..."
+    
+    # Emergency icon fix
+    if [ -f "lib/scripts/ios-workflow/fix_ios_icons_robust.sh" ]; then
+        chmod +x lib/scripts/ios-workflow/fix_ios_icons_robust.sh
+        if ./lib/scripts/ios-workflow/fix_ios_icons_robust.sh; then
+            log_success "✅ Emergency icon fix completed"
+        else
+            log_error "❌ Emergency icon fix failed - build may fail validation"
+        fi
+    else
+        log_error "❌ Emergency icon fix script not found"
+    fi
+fi
+
+if [[ ${#EMPTY_CRITICAL[@]} -gt 0 ]]; then
+    log_error "❌ CRITICAL: Empty icons before build:"
+    for icon in "${EMPTY_CRITICAL[@]}"; do
+        log_error "  - $icon"
+    done
+    log_error "❌ Build will fail App Store Connect validation"
+fi
+
+# Check CFBundleIconName in Info.plist
+PLIST_PATH="ios/Runner/Info.plist"
+if [[ -f "$PLIST_PATH" ]]; then
+    if grep -q "CFBundleIconName" "$PLIST_PATH"; then
+        log_success "✅ CFBundleIconName is present in Info.plist"
+    else
+        log_error "❌ CRITICAL: CFBundleIconName missing from Info.plist"
+        log_error "❌ Build will fail App Store Connect validation"
+        log_error "❌ Adding CFBundleIconName..."
+        
+        # Add CFBundleIconName
+        if ! grep -q "CFBundleIconName" "$PLIST_PATH"; then
+            sed -i '' 's/<dict>/<dict>\n\t<key>CFBundleIconName<\/key>\n\t<string>AppIcon<\/string>/' "$PLIST_PATH"
+            log_success "✅ CFBundleIconName added to Info.plist"
+        fi
+    fi
+else
+    log_error "❌ Info.plist not found: $PLIST_PATH"
+    exit 1
+fi
+
+# Final validation summary
+if [[ ${#MISSING_CRITICAL[@]} -eq 0 ]] && [[ ${#EMPTY_CRITICAL[@]} -eq 0 ]]; then
+    log_success "✅ All critical icons are present and valid"
+    log_success "✅ CFBundleIconName is properly configured"
+    log_success "✅ Build should pass App Store Connect validation"
+else
+    log_warning "⚠️ Icon issues detected - build may fail App Store Connect validation"
+    log_warning "⚠️ Continuing build but upload may fail..."
 fi
 
 # Build
