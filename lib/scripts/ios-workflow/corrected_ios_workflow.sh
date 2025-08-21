@@ -481,6 +481,21 @@ EOF
 
 log_success "✅ release.xcconfig updated"
 
+# Step 5.5: Fix corrupted Info.plist if needed (CRITICAL for workflow success)
+echo "🔧 Step 5.5: Fixing Corrupted Info.plist (if needed)..."
+
+# Check if Info.plist is corrupted and fix it
+if [ -f "lib/scripts/ios-workflow/fix_corrupted_infoplist.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/fix_corrupted_infoplist.sh
+    if ./lib/scripts/ios-workflow/fix_corrupted_infoplist.sh; then
+        log_success "✅ Info.plist corruption check completed"
+    else
+        log_warning "⚠️ Info.plist fix failed, but continuing..."
+    fi
+else
+    log_warning "⚠️ Info.plist fix script not found, skipping corruption check"
+fi
+
 # Validate bundle ID consistency
 log_info "🔍 Validating bundle ID consistency..."
 ACTUAL_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" ios/Runner/Info.plist 2>/dev/null || echo "")
