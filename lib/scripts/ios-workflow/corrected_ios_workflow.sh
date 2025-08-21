@@ -132,6 +132,21 @@ if [[ -n "$BUNDLE_ID" ]]; then
     
     # Also update the Info.plist directly
     PLIST_PATH="ios/Runner/Info.plist"
+    
+    # Check if Info.plist is corrupted and fix it BEFORE trying to modify it
+    if [ -f "lib/scripts/ios-workflow/fix_corrupted_infoplist.sh" ]; then
+        log_info "🔧 Checking for Info.plist corruption before bundle ID update..."
+        chmod +x lib/scripts/ios-workflow/fix_corrupted_infoplist.sh
+        if ./lib/scripts/ios-workflow/fix_corrupted_infoplist.sh; then
+            log_success "✅ Info.plist corruption fixed, proceeding with bundle ID update"
+        else
+            log_warning "⚠️ Info.plist fix failed, attempting to continue..."
+        fi
+    else
+        log_warning "⚠️ Info.plist fix script not found, proceeding without corruption check"
+    fi
+    
+    # Now try to update the bundle ID
     /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$PLIST_PATH" 2>/dev/null || \
         /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string $BUNDLE_ID" "$PLIST_PATH"
     
@@ -149,12 +164,28 @@ fi
 # Update version information
 if [[ -n "$VERSION_NAME" ]]; then
     PLIST_PATH="ios/Runner/Info.plist"
+    
+    # Check if Info.plist is corrupted before version update
+    if [ -f "lib/scripts/ios-workflow/fix_corrupted_infoplist.sh" ]; then
+        log_info "🔧 Checking for Info.plist corruption before version name update..."
+        chmod +x lib/scripts/ios-workflow/fix_corrupted_infoplist.sh
+        ./lib/scripts/ios-workflow/fix_corrupted_infoplist.sh
+    fi
+    
     plutil -replace CFBundleShortVersionString -string "$VERSION_NAME" "$PLIST_PATH"
     log_success "Updated version name to: $VERSION_NAME"
 fi
 
 if [[ -n "$VERSION_CODE" ]]; then
     PLIST_PATH="ios/Runner/Info.plist"
+    
+    # Check if Info.plist is corrupted before version update
+    if [ -f "lib/scripts/ios-workflow/fix_corrupted_infoplist.sh" ]; then
+        log_info "🔧 Checking for Info.plist corruption before version code update..."
+        chmod +x lib/scripts/ios-workflow/fix_corrupted_infoplist.sh
+        ./lib/scripts/ios-workflow/fix_corrupted_infoplist.sh
+    fi
+    
     plutil -replace CFBundleVersion -string "$VERSION_CODE" "$PLIST_PATH"
     log_success "Updated version code to: $VERSION_CODE"
 fi
