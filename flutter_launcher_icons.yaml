@@ -1,55 +1,5 @@
 flutter_launcher_icons:
-  # Android Configuration
   android: "launcher_icon"
-  min_sdk_android: 21
-  
-  # iOS Configuration
   ios: true
-  ios_content_mode: center
-  ios_remove_alpha: true
-  ios_background_color: "#FFFFFF"
-  
-  # Web Configuration
-  web:
-    generate: true
-    background_color: "#FFFFFF"
-    theme_color: "#FFFFFF"
-  
-  # Windows Configuration
-  windows:
-    generate: true
-    icon_size: 48
-  
-  # macOS Configuration
-  macos:
-    generate: true
-  
-  # Image Path (will be set dynamically)
   image_path: "assets/images/logo.png"
-  
-  # Remove old icons before generating new ones
-  remove_alpha_ios: true
-  remove_alpha_android: true
-  
-  # Generate icons for all iOS devices (App Store Connect requirements)
-  ios_icon_sizes:
-    - 20
-    - 29
-    - 40
-    - 58
-    - 60
-    - 76
-    - 80
-    - 87
-    - 120
-    - 152
-    - 167
-    - 180
-    - 1024
-  
-  # Android adaptive icons
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo.png"
-  
-  # Ensure high quality for App Store Connect
-  ios_icon_size: 1024
+  min_sdk_android: 21 # android min sdk min:16, default 21

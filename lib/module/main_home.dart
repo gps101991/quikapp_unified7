@@ -274,10 +274,31 @@ class _MainHomeState extends State<MainHome> {
     );
   }
 
+  void requestPermissions() async {
+    if (EnvConfig.isCamera) await Permission.camera.request();
+    if (EnvConfig.isLocation) await Permission.location.request(); // GPS
+    if (EnvConfig.isMic) await Permission.microphone.request();
+    if (EnvConfig.isContact) await Permission.contacts.request();
+    if (EnvConfig.isCalendar) await Permission.calendar.request();
+    if (EnvConfig.isNotification) await Permission.notification.request();
+
+    // Always request storage (as per your logic)
+    await Permission.storage.request();
+    if (isBiometricEnabled) {
+      if (Platform.isIOS) {
+        // Use raw value 33 for faceId (iOS)
+        await Permission.byValue(33).request();
+      } else if (Platform.isAndroid) {
+        // No need to request biometric permission manually on Android
+        // It's requested automatically by biometric plugins like local_auth
+      }
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-
+    requestPermissions();
     try {
       debugPrint("🚀 MainHome initializing...");
       debugPrint("   - Push Notify: ${EnvConfig.pushNotify}");

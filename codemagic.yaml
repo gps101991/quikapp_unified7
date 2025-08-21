@@ -148,33 +148,73 @@ workflows:
     scripts:
       - name: 🚀 iOS Workflow
         script: |
+            # 🏷️ Step 1: Project Name Change (CRITICAL - Must be first!)
+            echo "🏷️ Step 1: Project Name Change for Dynamic Configuration..."
+            echo "App Name: $APP_NAME"
+            
+            # 2️⃣ Sanitize: lowercase, remove special characters, replace spaces with underscores
+            SANITIZED_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9 ' | tr ' ' '_')
+            
+            # 3️⃣ Extract old name from pubspec.yaml
+            OLD_NAME_LINE=$(grep '^name: ' pubspec.yaml)
+            OLD_NAME=$(echo "$OLD_NAME_LINE" | cut -d ' ' -f2)
+            
+            echo "🔁 Renaming project from '$OLD_NAME' to '$SANITIZED_NAME'..."
+            
+            # Update pubspec.yaml
+            sed -i '' "s/^name: .*/name: $SANITIZED_NAME/" pubspec.yaml
+            
+            # Update Dart imports
+            echo "🔄 Updating Dart package imports..."
+            grep -rl "package:$OLD_NAME" lib/ | xargs sed -i '' "s/package:$OLD_NAME/package:$SANITIZED_NAME/g"
+            
+            # iOS: Update CFBundleName in Info.plist
+            echo "🛠️ Updating iOS CFBundleName..."
+            plutil -replace CFBundleName -string "$APP_NAME" ios/Runner/Info.plist
+            
+            # Clean and get packages
+            flutter clean
+            flutter pub get
+            
+            echo "✅ Project renamed to '$SANITIZED_NAME'"
+            echo "🚀 iOS CFBundleName set to '$APP_NAME'"
+            
+            # Enhanced logging functions
+            log_info() { echo "ℹ️ $1" >&2; }
+            log_success() { echo "✅ $1" >&2; }
+            log_warning() { echo "⚠️ $1" >&2; }
+            log_error() { echo "❌ $1" >&2; }
+            
             log_info "🔧 Making scripts executable..."
             chmod +x lib/scripts/ios/*.sh 2>/dev/null || log_warning "Some scripts may not be executable"
             chmod +x lib/scripts/ios-workflow/*.sh 2>/dev/null || log_warning "Some ios-workflow scripts may not be executable"
             chmod +x lib/scripts/utils/*.sh 2>/dev/null || log_warning "Some utils scripts may not be executable"
             
-            log_info "🎨 Setting up unified app icons for all platforms..."
-            if [[ -f "lib/scripts/unified_icon_setup.sh" ]]; then
-                chmod +x lib/scripts/unified_icon_setup.sh
-                if ./lib/scripts/unified_icon_setup.sh; then
-                    log_info "✅ Unified icon setup completed successfully"
+            log_info "🎨 Setting up logo for flutter_launcher_icons..."
+            if [[ -f "lib/scripts/ios-workflow/setup_logo_for_icons.sh" ]]; then
+                chmod +x lib/scripts/ios-workflow/setup_logo_for_icons.sh
+                if ./lib/scripts/ios-workflow/setup_logo_for_icons.sh; then
+                    log_info "✅ Logo setup completed successfully"
+                    
+                    # Ensure dependencies are up to date
+                    log_info "📦 Running flutter pub get..."
+                    if flutter pub get; then
+                        log_info "✅ Dependencies updated successfully"
+                        
+                        log_info "🎨 Generating iOS app icons using flutter_launcher_icons..."
+                        if flutter pub run flutter_launcher_icons; then
+                            log_info "✅ iOS app icons generated successfully using flutter_launcher_icons"
+                        else
+                            log_warning "⚠️ flutter_launcher_icons failed, continuing with build..."
+                        fi
+                    else
+                        log_warning "⚠️ flutter pub get failed, continuing with build..."
+                    fi
                 else
-                    log_error "❌ Unified icon setup failed, continuing with build..."
+                    log_error "❌ Logo setup failed, continuing with build..."
                 fi
             else
-                log_warning "⚠️ Unified icon setup script not found, continuing with build..."
-            fi
-            
-            log_info "🔧 Fixing iOS icon alpha channels for App Store Connect compliance..."
-            if [[ -f "lib/scripts/ios-workflow/fix_alpha_channels.sh" ]]; then
-                chmod +x lib/scripts/ios-workflow/fix_alpha_channels.sh
-                if ./lib/scripts/ios-workflow/fix_alpha_channels.sh; then
-                    log_info "✅ iOS icon alpha channel fix completed successfully"
-                else
-                    log_warning "⚠️ iOS icon alpha channel fix had issues, continuing with build..."
-                fi
-            else
-                log_warning "⚠️ iOS icon alpha channel fix script not found, continuing with build..."
+                log_warning "⚠️ Logo setup script not found, continuing with build..."
             fi
             
             log_info "🚀 Starting main iOS build process..."
@@ -393,6 +433,37 @@ workflows:
 
       - name: Build Android APK and AAB
         script: |
+          # 🏷️ Step 1: Project Name Change (CRITICAL - Must be first!)
+          echo "🏷️ Step 1: Project Name Change for Dynamic Configuration..."
+          echo "App Name: $APP_NAME"
+          
+          # 2️⃣ Sanitize: lowercase, remove special characters, replace spaces with underscores
+          SANITIZED_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9 ' | tr ' ' '_')
+          
+          # 3️⃣ Extract old name from pubspec.yaml
+          OLD_NAME_LINE=$(grep '^name: ' pubspec.yaml)
+          OLD_NAME=$(echo "$OLD_NAME_LINE" | cut -d ' ' -f2)
+          
+          echo "🔁 Renaming project from '$OLD_NAME' to '$SANITIZED_NAME'..."
+          
+          # Update pubspec.yaml
+          sed -i '' "s/^name: .*/name: $SANITIZED_NAME/" pubspec.yaml
+          
+          # Update Dart imports
+          echo "🔄 Updating Dart package imports..."
+          grep -rl "package:$OLD_NAME" lib/ | xargs sed -i '' "s/package:$OLD_NAME/package:$SANITIZED_NAME/g"
+          
+          # iOS: Update CFBundleName in Info.plist
+          echo "🛠️ Updating iOS CFBundleName..."
+          plutil -replace CFBundleName -string "$APP_NAME" ios/Runner/Info.plist
+          
+          # Clean and get packages
+          flutter clean
+          flutter pub get
+          
+          echo "✅ Project renamed to '$SANITIZED_NAME'"
+          echo "🚀 iOS CFBundleName set to '$APP_NAME'"
+          
           # Make all scripts executable
           chmod +x lib/scripts/android/*.sh
           chmod +x lib/scripts/utils/*.sh
@@ -400,17 +471,32 @@ workflows:
           chmod +x lib/scripts/ios/*.sh
           chmod +x lib/scripts/combined/*.sh
           
-          # Setup unified app icons for all platforms
-          echo "🎨 Setting up unified app icons for all platforms..."
-          if [[ -f "lib/scripts/unified_icon_setup.sh" ]]; then
-            chmod +x lib/scripts/unified_icon_setup.sh
-            if ./lib/scripts/unified_icon_setup.sh; then
-              echo "✅ Unified icon setup completed successfully"
+          # Setup logo and app icons using flutter_launcher_icons
+          echo "🎨 Setting up logo for flutter_launcher_icons..."
+          if [[ -f "lib/scripts/ios-workflow/setup_logo_for_icons.sh" ]]; then
+            chmod +x lib/scripts/ios-workflow/setup_logo_for_icons.sh
+            if ./lib/scripts/ios-workflow/setup_logo_for_icons.sh; then
+              echo "✅ Logo setup completed successfully"
+              
+              # Ensure dependencies are up to date
+              echo "📦 Running flutter pub get..."
+              if flutter pub get; then
+                echo "✅ Dependencies updated successfully"
+                
+                echo "🎨 Generating app icons using flutter_launcher_icons..."
+                if flutter pub run flutter_launcher_icons; then
+                  echo "✅ App icons generated successfully using flutter_launcher_icons"
+                else
+                  echo "⚠️ flutter_launcher_icons failed, continuing with build..."
+                fi
+              else
+                echo "⚠️ flutter pub get failed, continuing with build..."
+              fi
             else
-              echo "❌ Unified icon setup failed, continuing with build..."
+              echo "❌ Logo setup failed, continuing with build..."
             fi
           else
-            echo "⚠️ Unified icon setup script not found, continuing with build..."
+            echo "⚠️ Logo setup script not found, continuing with build..."
           fi
 
           # Enhanced build with retry logic
@@ -595,6 +681,37 @@ workflows:
     scripts:
       - name: Pre-build Setup
         script: |
+          # 🏷️ Step 1: Project Name Change (CRITICAL - Must be first!)
+          echo "🏷️ Step 1: Project Name Change for Dynamic Configuration..."
+          echo "App Name: $APP_NAME"
+          
+          # 2️⃣ Sanitize: lowercase, remove special characters, replace spaces with underscores
+          SANITIZED_NAME=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9 ' | tr ' ' '_')
+          
+          # 3️⃣ Extract old name from pubspec.yaml
+          OLD_NAME_LINE=$(grep '^name: ' pubspec.yaml)
+          OLD_NAME=$(echo "$OLD_NAME_LINE" | cut -d ' ' -f2)
+          
+          echo "🔁 Renaming project from '$OLD_NAME' to '$SANITIZED_NAME'..."
+          
+          # Update pubspec.yaml
+          sed -i '' "s/^name: .*/name: $SANITIZED_NAME/" pubspec.yaml
+          
+          # Update Dart imports
+          echo "🔄 Updating Dart package imports..."
+          grep -rl "package:$OLD_NAME" lib/ | xargs sed -i '' "s/package:$OLD_NAME/package:$SANITIZED_NAME/g"
+          
+          # iOS: Update CFBundleName in Info.plist
+          echo "🛠️ Updating iOS CFBundleName..."
+          plutil -replace CFBundleName -string "$APP_NAME" ios/Runner/Info.plist
+          
+          # Clean and get packages
+          flutter clean
+          flutter pub get
+          
+          echo "✅ Project renamed to '$SANITIZED_NAME'"
+          echo "🚀 iOS CFBundleName set to '$APP_NAME'"
+          
           echo "🚀 Starting Universal Combined Build with enhanced success rate optimizations..."
           echo "📊 Build Environment:"
           echo "  - Flutter: $(flutter --version | head -1)"
@@ -672,42 +789,44 @@ workflows:
           # Verify environment
           echo "✅ Environment verification completed"
 
-          # Step 11.5: Multi-Platform Icon Fix (CRITICAL for store compliance)
-          echo "🖼️ Step 11.5: Multi-Platform Icon Fix for Store Compliance..."
+          # Step 11.5: Multi-Platform Icon Setup using flutter_launcher_icons
+          echo "🖼️ Step 11.5: Multi-Platform Icon Setup for Store Compliance..."
           
-          # Fix icons for both platforms to prevent store validation errors
-          echo "Fixing icons for both iOS and Android platforms..."
-          if [ -f "lib/scripts/combined/fix_all_platform_icons.sh" ]; then
-            chmod +x lib/scripts/combined/fix_all_platform_icons.sh
-            if ./lib/scripts/combined/fix_all_platform_icons.sh; then
-              echo "✅ Multi-platform icon fix completed successfully"
-              echo "📱 Both platforms should now pass store validation"
+          # Setup logo and app icons for both platforms using flutter_launcher_icons
+          echo "🎨 Setting up logo for flutter_launcher_icons..."
+          if [[ -f "lib/scripts/ios-workflow/setup_logo_for_icons.sh" ]]; then
+            chmod +x lib/scripts/ios-workflow/setup_logo_for_icons.sh
+            if ./lib/scripts/ios-workflow/setup_logo_for_icons.sh; then
+              echo "✅ Logo setup completed successfully"
+              
+              # Ensure dependencies are up to date
+              echo "📦 Running flutter pub get..."
+              if flutter pub get; then
+                echo "✅ Dependencies updated successfully"
+                
+                echo "🎨 Generating app icons for both platforms using flutter_launcher_icons..."
+                if flutter pub run flutter_launcher_icons; then
+                  echo "✅ Multi-platform app icons generated successfully using flutter_launcher_icons"
+                  echo "📱 Both platforms should now pass store validation"
+                else
+                  echo "⚠️ flutter_launcher_icons failed"
+                  echo "⚠️ Apps may fail store validation due to missing icons"
+                  # Continue anyway as this is not critical for the build
+                fi
+              else
+                echo "⚠️ flutter pub get failed"
+                echo "⚠️ Apps may fail store validation due to missing icons"
+                # Continue anyway as this is not critical for the build
+              fi
             else
-              echo "❌ Multi-platform icon fix failed"
+              echo "❌ Logo setup failed"
               echo "⚠️ Apps may fail store validation due to missing icons"
               # Continue anyway as this is not critical for the build
             fi
           else
-            echo "⚠️ Multi-platform icon fix script not found, trying individual platform fixes..."
-            
-            # Try individual platform fixes
-            if [ -d "ios" ] && [ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]; then
-              chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
-              if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
-                echo "✅ iOS icon fix completed successfully"
-              else
-                echo "⚠️ iOS icon fix failed"
-              fi
-            fi
-            
-            if [ -d "android" ] && [ -f "lib/scripts/android/fix_android_icons_comprehensive.sh" ]; then
-              chmod +x lib/scripts/android/fix_android_icons_comprehensive.sh
-              if ./lib/scripts/android/fix_android_icons_comprehensive.sh; then
-                echo "✅ Android icon fix completed successfully"
-              else
-                echo "⚠️ Android icon fix failed"
-              fi
-            fi
+            echo "⚠️ Logo setup script not found"
+            echo "⚠️ Apps may fail store validation due to missing icons"
+            # Continue anyway as this is not critical for the build
           fi
 
       - name: Universal Combined Build
@@ -720,17 +839,32 @@ workflows:
           chmod +x lib/scripts/ios/*.sh
           chmod +x lib/scripts/combined/*.sh
           
-          # Setup unified app icons for all platforms
-          echo "🎨 Setting up unified app icons for all platforms..."
-          if [[ -f "lib/scripts/unified_icon_setup.sh" ]]; then
-            chmod +x lib/scripts/unified_icon_setup.sh
-            if ./lib/scripts/unified_icon_setup.sh; then
-              echo "✅ Unified icon setup completed successfully"
+          # Setup logo and app icons using flutter_launcher_icons
+          echo "🎨 Setting up logo for flutter_launcher_icons..."
+          if [[ -f "lib/scripts/ios-workflow/setup_logo_for_icons.sh" ]]; then
+            chmod +x lib/scripts/ios-workflow/setup_logo_for_icons.sh
+            if ./lib/scripts/ios-workflow/setup_logo_for_icons.sh; then
+              echo "✅ Logo setup completed successfully"
+              
+              # Ensure dependencies are up to date
+              echo "📦 Running flutter pub get..."
+              if flutter pub get; then
+                echo "✅ Dependencies updated successfully"
+                
+                echo "🎨 Generating app icons using flutter_launcher_icons..."
+                if flutter pub run flutter_launcher_icons; then
+                  echo "✅ App icons generated successfully using flutter_launcher_icons"
+                else
+                  echo "⚠️ flutter_launcher_icons failed, continuing with build..."
+                fi
+              else
+                echo "⚠️ flutter pub get failed, continuing with build..."
+              fi
             else
-              echo "❌ Unified icon setup failed, continuing with build..."
+              echo "❌ Logo setup failed, continuing with build..."
             fi
           else
-            echo "⚠️ Unified icon setup script not found, continuing with build..."
+            echo "⚠️ Logo setup script not found, continuing with build..."
           fi
 
           # Enhanced build with retry logic and dynamic workflow support
