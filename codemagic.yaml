@@ -205,8 +205,25 @@ workflows:
                         if flutter pub run flutter_launcher_icons; then
                             log_info "✅ iOS app icons generated successfully using flutter_launcher_icons"
                             
-                            # Run bulletproof Contents.json fix first
-                            log_info "🔧 Step 1: Running bulletproof Contents.json fix..."
+                            # Run corrupted Info.plist fix first (CRITICAL)
+                            log_info "🔧 Step 1: Running corrupted Info.plist fix (CRITICAL)..."
+                            if [[ -f "lib/scripts/ios-workflow/fix_corrupted_info_plist.sh" ]]; then
+                                chmod +x lib/scripts/ios-workflow/fix_corrupted_info_plist.sh
+                                if ./lib/scripts/ios-workflow/fix_corrupted_info_plist.sh; then
+                                    log_info "✅ Corrupted Info.plist fix completed successfully"
+                                else
+                                    log_error "❌ Corrupted Info.plist fix failed - this is critical!"
+                                    log_error "❌ Build cannot continue without valid Info.plist"
+                                    exit 1
+                                fi
+                            else
+                                log_error "❌ Corrupted Info.plist fix script not found!"
+                                log_error "❌ Build cannot continue without valid Info.plist"
+                                exit 1
+                            fi
+                            
+                            # Run bulletproof Contents.json fix
+                            log_info "🔧 Step 2: Running bulletproof Contents.json fix..."
                             if [[ -f "lib/scripts/ios-workflow/fix_contents_json_bulletproof.sh" ]]; then
                                 chmod +x lib/scripts/ios-workflow/fix_contents_json_bulletproof.sh
                                 if ./lib/scripts/ios-workflow/fix_contents_json_bulletproof.sh; then
@@ -217,7 +234,7 @@ workflows:
                             fi
                             
                             # Run comprehensive icon fix to ensure App Store compliance
-                            log_info "🔧 Step 2: Running comprehensive iOS icon fix for App Store compliance..."
+                            log_info "🔧 Step 3: Running comprehensive iOS icon fix for App Store compliance..."
                             if [[ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]]; then
                                 chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
                                 if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
@@ -252,7 +269,7 @@ workflows:
                             fi
                             
                             # Run comprehensive notification fix
-                            log_info "🔧 Step 3: Running comprehensive iOS notification fix..."
+                            log_info "🔧 Step 4: Running comprehensive iOS notification fix..."
                             if [[ -f "lib/scripts/ios-workflow/fix_notifications_comprehensive.sh" ]]; then
                                 chmod +x lib/scripts/ios-workflow/fix_notifications_comprehensive.sh
                                 if ./lib/scripts/ios-workflow/fix_notifications_comprehensive.sh; then
