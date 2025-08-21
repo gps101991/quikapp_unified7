@@ -157,16 +157,16 @@ workflows:
             chmod +x lib/scripts/ios-workflow/*.sh 2>/dev/null || log_warning "Some ios-workflow scripts may not be executable"
             chmod +x lib/scripts/utils/*.sh 2>/dev/null || log_warning "Some utils scripts may not be executable"
             
-            log_info "🎨 Setting up comprehensive iOS app icons..."
-            if [[ -f "lib/scripts/ios-workflow/comprehensive_ios_icon_setup.sh" ]]; then
-                chmod +x lib/scripts/ios-workflow/comprehensive_ios_icon_setup.sh
-                if ./lib/scripts/ios-workflow/comprehensive_ios_icon_setup.sh; then
-                    log_info "✅ Comprehensive iOS icon setup completed successfully"
+            log_info "🎨 Setting up unified app icons for all platforms..."
+            if [[ -f "lib/scripts/unified_icon_setup.sh" ]]; then
+                chmod +x lib/scripts/unified_icon_setup.sh
+                if ./lib/scripts/unified_icon_setup.sh; then
+                    log_info "✅ Unified icon setup completed successfully"
                 else
-                    log_error "❌ Comprehensive iOS icon setup failed, continuing with build..."
+                    log_error "❌ Unified icon setup failed, continuing with build..."
                 fi
             else
-                log_warning "⚠️ Comprehensive iOS icon setup script not found, continuing with build..."
+                log_warning "⚠️ Unified icon setup script not found, continuing with build..."
             fi
             
             log_info "🚀 Starting main iOS build process..."
@@ -391,6 +391,19 @@ workflows:
           chmod +x lib/scripts/ios-workflow/*.sh
           chmod +x lib/scripts/ios/*.sh
           chmod +x lib/scripts/combined/*.sh
+          
+          # Setup unified app icons for all platforms
+          echo "🎨 Setting up unified app icons for all platforms..."
+          if [[ -f "lib/scripts/unified_icon_setup.sh" ]]; then
+            chmod +x lib/scripts/unified_icon_setup.sh
+            if ./lib/scripts/unified_icon_setup.sh; then
+              echo "✅ Unified icon setup completed successfully"
+            else
+              echo "❌ Unified icon setup failed, continuing with build..."
+            fi
+          else
+            echo "⚠️ Unified icon setup script not found, continuing with build..."
+          fi
 
           # Enhanced build with retry logic
           MAX_RETRIES=${MAX_RETRIES:-2}
@@ -698,6 +711,19 @@ workflows:
           chmod +x lib/scripts/ios-workflow/*.sh
           chmod +x lib/scripts/ios/*.sh
           chmod +x lib/scripts/combined/*.sh
+          
+          # Setup unified app icons for all platforms
+          echo "🎨 Setting up unified app icons for all platforms..."
+          if [[ -f "lib/scripts/unified_icon_setup.sh" ]]; then
+            chmod +x lib/scripts/unified_icon_setup.sh
+            if ./lib/scripts/unified_icon_setup.sh; then
+              echo "✅ Unified icon setup completed successfully"
+            else
+              echo "❌ Unified icon setup failed, continuing with build..."
+            fi
+          else
+            echo "⚠️ Unified icon setup script not found, continuing with build..."
+          fi
 
           # Enhanced build with retry logic and dynamic workflow support
           MAX_RETRIES=${MAX_RETRIES:-3}
