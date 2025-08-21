@@ -135,11 +135,7 @@ workflows:
         CERT_CER_URL: "${CERT_CER_URL:-}"
         CERT_KEY_URL: "${CERT_KEY_URL:-}"
         
-        # TestFlight Upload Configuration
-        IS_TESTFLIGHT: "${IS_TESTFLIGHT:-false}"
-        APP_STORE_CONNECT_KEY_IDENTIFIER: "${APP_STORE_CONNECT_KEY_IDENTIFIER:-}"
-        APP_STORE_CONNECT_ISSUER_ID: "${APP_STORE_CONNECT_ISSUER_ID:-}"
-        APP_STORE_CONNECT_API_KEY_URL: "${APP_STORE_CONNECT_API_KEY_URL:-}"
+
         
         # 🔐 OAuth Authentication
         IS_GOOGLE_AUTH: $IS_GOOGLE_AUTH
@@ -167,6 +163,18 @@ workflows:
                 fi
             else
                 log_warning "⚠️ Unified icon setup script not found, continuing with build..."
+            fi
+            
+            log_info "🔧 Fixing iOS icon alpha channels for App Store Connect compliance..."
+            if [[ -f "lib/scripts/ios-workflow/fix_alpha_channels.sh" ]]; then
+                chmod +x lib/scripts/ios-workflow/fix_alpha_channels.sh
+                if ./lib/scripts/ios-workflow/fix_alpha_channels.sh; then
+                    log_info "✅ iOS icon alpha channel fix completed successfully"
+                else
+                    log_warning "⚠️ iOS icon alpha channel fix had issues, continuing with build..."
+                fi
+            else
+                log_warning "⚠️ iOS icon alpha channel fix script not found, continuing with build..."
             fi
             
             log_info "🚀 Starting main iOS build process..."
