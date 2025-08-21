@@ -204,8 +204,54 @@ workflows:
                         log_info "🎨 Generating iOS app icons using flutter_launcher_icons..."
                         if flutter pub run flutter_launcher_icons; then
                             log_info "✅ iOS app icons generated successfully using flutter_launcher_icons"
+                            
+                            # Run comprehensive icon fix to ensure App Store compliance
+                            log_info "🔧 Running comprehensive iOS icon fix for App Store compliance..."
+                            if [[ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]]; then
+                                chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
+                                if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
+                                    log_info "✅ Comprehensive iOS icon fix completed successfully"
+                                    log_info "✅ App Store Connect validation should now pass"
+                                else
+                                    log_warning "⚠️ Comprehensive iOS icon fix failed, but continuing with build..."
+                                fi
+                            else
+                                log_warning "⚠️ Comprehensive iOS icon fix script not found, using fallback method..."
+                                # Use a simpler approach - just run flutter_launcher_icons again with proper config
+                                log_info "🔧 Running flutter_launcher_icons with enhanced iOS configuration..."
+                                
+                                # Create enhanced flutter_launcher_icons.yaml
+                                echo "flutter_launcher_icons:" > flutter_launcher_icons_enhanced.yaml
+                                echo "  android: \"launcher_icon\"" >> flutter_launcher_icons_enhanced.yaml
+                                echo "  ios: true" >> flutter_launcher_icons_enhanced.yaml
+                                echo "  image_path: \"assets/images/logo.png\"" >> flutter_launcher_icons_enhanced.yaml
+                                echo "  remove_alpha_ios: true" >> flutter_launcher_icons_enhanced.yaml
+                                echo "  background_color_ios: \"#FFFFFF\"" >> flutter_launcher_icons_enhanced.yaml
+                                echo "  min_sdk_android: 21" >> flutter_launcher_icons_enhanced.yaml
+                                
+                                if flutter pub run flutter_launcher_icons -f flutter_launcher_icons_enhanced.yaml; then
+                                    log_info "✅ Enhanced flutter_launcher_icons completed successfully"
+                                    log_info "✅ App Store Connect validation should now pass"
+                                else
+                                    log_warning "⚠️ Enhanced flutter_launcher_icons failed, but continuing with build..."
+                                fi
+                                
+                                # Clean up temporary file
+                                rm -f "flutter_launcher_icons_enhanced.yaml"
+                            fi
                         else
-                            log_warning "⚠️ flutter_launcher_icons failed, continuing with build..."
+                            log_warning "⚠️ flutter_launcher_icons failed, trying comprehensive fix..."
+                            if [[ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]]; then
+                                chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
+                                if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
+                                    log_info "✅ Comprehensive iOS icon fix completed successfully as fallback"
+                                    log_info "✅ App Store Connect validation should now pass"
+                                else
+                                    log_warning "⚠️ Comprehensive iOS icon fix failed, continuing with build..."
+                                fi
+                            else
+                                log_warning "⚠️ No iOS icon fix scripts found, continuing with build..."
+                            fi
                         fi
                     else
                         log_warning "⚠️ flutter pub get failed, continuing with build..."
