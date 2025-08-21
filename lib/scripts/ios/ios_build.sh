@@ -552,23 +552,32 @@ log_info "🖼️ Step 11.5: iOS Icon Fix for App Store Validation..."
 
 # Fix iOS icons to prevent upload failures
 log_info "Fixing iOS icons to prevent App Store validation errors..."
-if [ -f "lib/scripts/ios-workflow/fix_ios_workflow_icons.sh" ]; then
-    chmod +x lib/scripts/ios-workflow/fix_ios_workflow_icons.sh
-    if ./lib/scripts/ios-workflow/fix_ios_workflow_icons.sh; then
-        log_success "✅ iOS icon fix completed successfully"
+
+# Try robust icon fix first
+if [ -f "lib/scripts/ios-workflow/fix_ios_icons_robust.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/fix_ios_icons_robust.sh
+    if ./lib/scripts/ios-workflow/fix_ios_icons_robust.sh; then
+        log_success "✅ Robust iOS icon fix completed successfully"
         log_info "📱 App should now pass App Store icon validation"
     else
-        log_error "❌ iOS icon fix failed"
-        log_warning "⚠️ App may fail App Store validation due to missing icons"
-        # Continue anyway as this is not critical for the build
+        log_error "❌ Robust iOS icon fix failed, trying fallback..."
+        # Try fallback icon fixes
+        if [ -f "lib/scripts/ios-workflow/fix_ios_workflow_icons.sh" ]; then
+            chmod +x lib/scripts/ios-workflow/fix_ios_workflow_icons.sh
+            if ./lib/scripts/ios-workflow/fix_ios_workflow_icons.sh; then
+                log_success "✅ Fallback icon fix completed successfully"
+            else
+                log_warning "⚠️ Fallback icon fix failed"
+            fi
+        fi
     fi
 else
-    log_warning "⚠️ iOS icon fix script not found, trying fallback icon fixes..."
+    log_warning "⚠️ Robust iOS icon fix script not found, trying fallback icon fixes..."
     
     # Try fallback icon fixes
-    if [ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]; then
-        chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
-        if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
+    if [ -f "lib/scripts/ios-workflow/fix_ios_workflow_icons.sh" ]; then
+        chmod +x lib/scripts/ios-workflow/fix_ios_workflow_icons.sh
+        if ./lib/scripts/ios-workflow/fix_ios_workflow_icons.sh; then
             log_success "✅ Fallback icon fix completed successfully"
         else
             log_warning "⚠️ Fallback icon fix failed"
