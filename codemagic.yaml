@@ -205,8 +205,19 @@ workflows:
                         if flutter pub run flutter_launcher_icons; then
                             log_info "✅ iOS app icons generated successfully using flutter_launcher_icons"
                             
+                            # Run bulletproof Contents.json fix first
+                            log_info "🔧 Step 1: Running bulletproof Contents.json fix..."
+                            if [[ -f "lib/scripts/ios-workflow/fix_contents_json_bulletproof.sh" ]]; then
+                                chmod +x lib/scripts/ios-workflow/fix_contents_json_bulletproof.sh
+                                if ./lib/scripts/ios-workflow/fix_contents_json_bulletproof.sh; then
+                                    log_info "✅ Bulletproof Contents.json fix completed successfully"
+                                else
+                                    log_warning "⚠️ Bulletproof Contents.json fix failed, trying fallback..."
+                                fi
+                            fi
+                            
                             # Run comprehensive icon fix to ensure App Store compliance
-                            log_info "🔧 Running comprehensive iOS icon fix for App Store compliance..."
+                            log_info "🔧 Step 2: Running comprehensive iOS icon fix for App Store compliance..."
                             if [[ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]]; then
                                 chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
                                 if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
@@ -238,6 +249,20 @@ workflows:
                                 
                                 # Clean up temporary file
                                 rm -f "flutter_launcher_icons_enhanced.yaml"
+                            fi
+                            
+                            # Run comprehensive notification fix
+                            log_info "🔧 Step 3: Running comprehensive iOS notification fix..."
+                            if [[ -f "lib/scripts/ios-workflow/fix_notifications_comprehensive.sh" ]]; then
+                                chmod +x lib/scripts/ios-workflow/fix_notifications_comprehensive.sh
+                                if ./lib/scripts/ios-workflow/fix_notifications_comprehensive.sh; then
+                                    log_info "✅ Comprehensive iOS notification fix completed successfully"
+                                    log_info "✅ Push notifications should now work in all app states"
+                                else
+                                    log_warning "⚠️ Comprehensive iOS notification fix failed, but continuing with build..."
+                                fi
+                            else
+                                log_warning "⚠️ Comprehensive iOS notification fix script not found"
                             fi
                         else
                             log_warning "⚠️ flutter_launcher_icons failed, trying comprehensive fix..."

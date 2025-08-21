@@ -69,14 +69,20 @@ if command -v sips > /dev/null 2>&1; then
     if [[ -n "$SOURCE_SIZE" ]]; then
         SOURCE_WIDTH=$(echo "$SOURCE_SIZE" | cut -d'x' -f1)
         SOURCE_HEIGHT=$(echo "$SOURCE_SIZE" | cut -d'x' -f2)
-        if [[ "$SOURCE_WIDTH" -ge 1024 ]] && [[ "$SOURCE_HEIGHT" -ge 1024 ]]; then
-            log_success "✅ Source icon has excellent resolution: $SOURCE_SIZE"
-        elif [[ "$SOURCE_WIDTH" -ge 512 ]] && [[ "$SOURCE_HEIGHT" -ge 512 ]]; then
-            log_success "✅ Source icon has good resolution: $SOURCE_SIZE"
-        elif [[ "$SOURCE_WIDTH" -ge 256 ]] && [[ "$SOURCE_HEIGHT" -ge 256 ]]; then
-            log_warning "⚠️ Source icon has moderate resolution: $SOURCE_SIZE (may affect quality)"
+        
+        # Validate that we got actual numbers
+        if [[ "$SOURCE_WIDTH" =~ ^[0-9]+$ ]] && [[ "$SOURCE_HEIGHT" =~ ^[0-9]+$ ]]; then
+            if [[ "$SOURCE_WIDTH" -ge 1024 ]] && [[ "$SOURCE_HEIGHT" -ge 1024 ]]; then
+                log_success "✅ Source icon has excellent resolution: $SOURCE_SIZE"
+            elif [[ "$SOURCE_WIDTH" -ge 512 ]] && [[ "$SOURCE_HEIGHT" -ge 512 ]]; then
+                log_success "✅ Source icon has good resolution: $SOURCE_SIZE"
+            elif [[ "$SOURCE_WIDTH" -ge 256 ]] && [[ "$SOURCE_HEIGHT" -ge 256 ]]; then
+                log_warning "⚠️ Source icon has moderate resolution: $SOURCE_SIZE (may affect quality)"
+            else
+                log_warning "⚠️ Source icon has low resolution: $SOURCE_SIZE (will affect quality)"
+            fi
         else
-            log_warning "⚠️ Source icon has low resolution: $SOURCE_SIZE (will affect quality)"
+            log_warning "⚠️ Could not determine source icon dimensions: $SOURCE_SIZE"
         fi
     fi
 fi
@@ -116,19 +122,22 @@ if [[ ! -f "$ICON_1024_PATH" ]] || [[ ! -s "$ICON_1024_PATH" ]]; then
     log_info "1024x1024 icon missing or empty, will regenerate..."
     NEEDS_REGENERATION=true
 else
-    # Check if existing icon has correct dimensions
-    if command -v sips > /dev/null 2>&1; then
-        ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
-        if [[ "$ICON_SIZE" != "1024x1024" ]]; then
-            log_warning "⚠️ 1024x1024 icon has wrong dimensions: $ICON_SIZE (expected: 1024x1024), will regenerate..."
-            NEEDS_REGENERATION=true
+            # Check if existing icon has correct dimensions
+        if command -v sips > /dev/null 2>&1; then
+            ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
+            if [[ "$ICON_SIZE" =~ ^[0-9]+x[0-9]+$ ]] && [[ "$ICON_SIZE" != "1024x1024" ]]; then
+                log_warning "⚠️ 1024x1024 icon has wrong dimensions: $ICON_SIZE (expected: 1024x1024), will regenerate..."
+                NEEDS_REGENERATION=true
+            elif [[ "$ICON_SIZE" =~ ^[0-9]+x[0-9]+$ ]]; then
+                log_success "✅ 1024x1024 icon already exists with correct dimensions (1024x1024)"
+            else
+                log_warning "⚠️ Could not verify icon dimensions: $ICON_SIZE, will regenerate to ensure correctness..."
+                NEEDS_REGENERATION=true
+            fi
         else
-            log_success "✅ 1024x1024 icon already exists with correct dimensions (1024x1024)"
+            log_warning "⚠️ Cannot verify icon dimensions (sips not available), will regenerate to ensure correctness..."
+            NEEDS_REGENERATION=true
         fi
-    else
-        log_warning "⚠️ Cannot verify icon dimensions (sips not available), will regenerate to ensure correctness..."
-        NEEDS_REGENERATION=true
-    fi
 fi
 
 if [[ "$NEEDS_REGENERATION" == "true" ]]; then
@@ -157,11 +166,13 @@ if [[ "$NEEDS_REGENERATION" == "true" ]]; then
     if [[ -f "$ICON_1024_PATH" ]] && [[ -s "$ICON_1024_PATH" ]]; then
         if command -v sips > /dev/null 2>&1; then
             ICON_SIZE=$(sips -g pixelWidth -g pixelHeight "$ICON_1024_PATH" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
-            if [[ "$ICON_SIZE" == "1024x1024" ]]; then
+            if [[ "$ICON_SIZE" =~ ^[0-9]+x[0-9]+$ ]] && [[ "$ICON_SIZE" == "1024x1024" ]]; then
                 log_success "✅ 1024x1024 icon validated: correct dimensions and content"
-            else
+            elif [[ "$ICON_SIZE" =~ ^[0-9]+x[0-9]+$ ]]; then
                 log_error "❌ 1024x1024 icon has wrong dimensions: $ICON_SIZE (expected: 1024x1024)"
                 exit 1
+            else
+                log_warning "⚠️ Could not verify icon dimensions: $ICON_SIZE, but icon file exists"
             fi
         else
             log_success "✅ 1024x1024 icon generated and has content"

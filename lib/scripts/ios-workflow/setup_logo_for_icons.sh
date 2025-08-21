@@ -60,18 +60,23 @@ if command -v sips > /dev/null 2>&1; then
     LOGO_SIZE=$(sips -g pixelWidth -g pixelHeight "$ASSETS_DIR/logo.png" 2>/dev/null | grep -E "(pixelWidth|pixelHeight)" | awk '{print $2}' | tr '\n' 'x' | sed 's/x$//')
     if [[ -n "$LOGO_SIZE" ]]; then
         LOGO_WIDTH=$(echo "$LOGO_SIZE" | cut -d'x' -f1)
-        LOGO_HEIGHT=$(echo "$LOGO_SIZE" | cut -d' ' -f2)
+        LOGO_HEIGHT=$(echo "$LOGO_SIZE" | cut -d'x' -f2)
         
-        log_info "Logo dimensions: ${LOGO_WIDTH}x${LOGO_HEIGHT}"
-        
-        if [[ "$LOGO_WIDTH" -ge 1024 ]] && [[ "$LOGO_HEIGHT" -ge 1024 ]]; then
-            log_success "✅ Logo has excellent resolution for app icons"
-        elif [[ "$LOGO_WIDTH" -ge 512 ]] && [[ "$LOGO_HEIGHT" -ge 512 ]]; then
-            log_success "✅ Logo has good resolution for app icons"
-        elif [[ "$LOGO_WIDTH" -ge 256 ]] && [[ "$LOGO_HEIGHT" -ge 256 ]]; then
-            log_warning "⚠️ Logo has moderate resolution (${LOGO_WIDTH}x${LOGO_HEIGHT}) - may affect icon quality"
+        # Validate that we got actual numbers
+        if [[ "$LOGO_WIDTH" =~ ^[0-9]+$ ]] && [[ "$LOGO_HEIGHT" =~ ^[0-9]+$ ]]; then
+            log_info "Logo dimensions: ${LOGO_WIDTH}x${LOGO_HEIGHT}"
+            
+            if [[ "$LOGO_WIDTH" -ge 1024 ]] && [[ "$LOGO_HEIGHT" -ge 1024 ]]; then
+                log_success "✅ Logo has excellent resolution for app icons"
+            elif [[ "$LOGO_WIDTH" -ge 512 ]] && [[ "$LOGO_HEIGHT" -ge 512 ]]; then
+                log_success "✅ Logo has good resolution for app icons"
+            elif [[ "$LOGO_WIDTH" -ge 256 ]] && [[ "$LOGO_HEIGHT" -ge 256 ]]; then
+                log_warning "⚠️ Logo has moderate resolution (${LOGO_WIDTH}x${LOGO_HEIGHT}) - may affect icon quality"
+            else
+                log_warning "⚠️ Logo has low resolution (${LOGO_WIDTH}x${LOGO_HEIGHT}) - will affect icon quality"
+            fi
         else
-            log_warning "⚠️ Logo has low resolution (${LOGO_WIDTH}x${LOGO_HEIGHT}) - will affect icon quality"
+            log_warning "⚠️ Could not determine logo dimensions: $LOGO_SIZE"
         fi
     fi
 else
