@@ -87,8 +87,23 @@ if [[ ${#MISSING_CRITICAL[@]} -gt 0 ]]; then
     exit 1
 fi
 
-# Step 4: Verify Contents.json
-log_info "Step 4: Verifying Contents.json configuration..."
+# Step 4: Fix Icon Transparency (Critical for App Store Connect)
+log_info "Step 4: Fixing icon transparency for App Store Connect compliance..."
+
+if [[ -f "lib/scripts/ios-workflow/fix_icon_transparency.sh" ]]; then
+    chmod +x lib/scripts/ios-workflow/fix_icon_transparency.sh
+    
+    if ./lib/scripts/ios-workflow/fix_icon_transparency.sh; then
+        log_success "✅ Icon transparency fix completed successfully"
+    else
+        log_warning "⚠️ Icon transparency fix had issues, but continuing..."
+    fi
+else
+    log_warning "⚠️ Icon transparency fix script not found, continuing..."
+fi
+
+# Step 5: Verify Contents.json
+log_info "Step 5: Verifying Contents.json configuration..."
 
 CONTENTS_JSON="$ICON_DIR/Contents.json"
 if [[ -f "$CONTENTS_JSON" ]]; then
@@ -114,8 +129,8 @@ else
     exit 1
 fi
 
-# Step 5: Final App Store Connect Validation
-log_info "Step 5: Final App Store Connect validation..."
+# Step 6: Final App Store Connect Validation
+log_info "Step 6: Final App Store Connect validation..."
 
 # Check 1024x1024 icon specifically
 ICON_1024_PATH="$ICON_DIR/Icon-App-1024x1024@1x.png"

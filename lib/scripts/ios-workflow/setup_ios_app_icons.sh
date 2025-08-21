@@ -40,7 +40,10 @@ if command -v flutter > /dev/null 2>&1; then
             # Generate icons using Flutter Launcher Icons
             log_info "Generating iOS app icons using Flutter Launcher Icons..."
             
-            if flutter pub get && flutter pub run flutter_launcher_icons:main -f flutter_launcher_icons.yaml; then
+            # Ensure Flutter Launcher Icons generates icons without alpha channels
+            log_info "Generating iOS app icons using Flutter Launcher Icons (no alpha channels)..."
+            
+            if flutter pub get && flutter pub run flutter_launcher_icons:main -f flutter_launcher_icons.yaml --remove-alpha-ios; then
                 log_success "✅ iOS app icons generated successfully using Flutter Launcher Icons!"
                 
                 # Verify that icons were generated

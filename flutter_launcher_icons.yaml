@@ -29,6 +29,12 @@ flutter_launcher_icons:
   # Remove old icons before generating new ones
   remove_alpha_ios: true
   
+  # Ensure no alpha channels for App Store Connect compliance
+  ios_remove_alpha: true
+  
+  # Background color for icons (ensures no transparency)
+  ios_background_color: "#FFFFFF"
+  
   # Generate icons for all iOS devices
   ios_icon_sizes:
     - 20
