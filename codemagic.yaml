@@ -636,6 +636,44 @@ workflows:
           # Verify environment
           echo "✅ Environment verification completed"
 
+          # Step 11.5: Multi-Platform Icon Fix (CRITICAL for store compliance)
+          echo "🖼️ Step 11.5: Multi-Platform Icon Fix for Store Compliance..."
+          
+          # Fix icons for both platforms to prevent store validation errors
+          echo "Fixing icons for both iOS and Android platforms..."
+          if [ -f "lib/scripts/combined/fix_all_platform_icons.sh" ]; then
+            chmod +x lib/scripts/combined/fix_all_platform_icons.sh
+            if ./lib/scripts/combined/fix_all_platform_icons.sh; then
+              echo "✅ Multi-platform icon fix completed successfully"
+              echo "📱 Both platforms should now pass store validation"
+            else
+              echo "❌ Multi-platform icon fix failed"
+              echo "⚠️ Apps may fail store validation due to missing icons"
+              # Continue anyway as this is not critical for the build
+            fi
+          else
+            echo "⚠️ Multi-platform icon fix script not found, trying individual platform fixes..."
+            
+            # Try individual platform fixes
+            if [ -d "ios" ] && [ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]; then
+              chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
+              if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
+                echo "✅ iOS icon fix completed successfully"
+              else
+                echo "⚠️ iOS icon fix failed"
+              fi
+            fi
+            
+            if [ -d "android" ] && [ -f "lib/scripts/android/fix_android_icons_comprehensive.sh" ]; then
+              chmod +x lib/scripts/android/fix_android_icons_comprehensive.sh
+              if ./lib/scripts/android/fix_android_icons_comprehensive.sh; then
+                echo "✅ Android icon fix completed successfully"
+              else
+                echo "⚠️ Android icon fix failed"
+              fi
+            fi
+          fi
+
       - name: Universal Combined Build
         script: |
           # Make all scripts executable

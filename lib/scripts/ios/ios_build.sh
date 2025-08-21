@@ -532,6 +532,38 @@ else
     exit 1
 fi
 
+# Step 11.5: iOS Icon Fix (CRITICAL for App Store validation)
+log_info "🖼️ Step 11.5: iOS Icon Fix for App Store Validation..."
+
+# Fix iOS icons to prevent upload failures
+log_info "Fixing iOS icons to prevent App Store validation errors..."
+if [ -f "lib/scripts/ios-workflow/fix_ios_workflow_icons.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/fix_ios_workflow_icons.sh
+    if ./lib/scripts/ios-workflow/fix_ios_workflow_icons.sh; then
+        log_success "✅ iOS icon fix completed successfully"
+        log_info "📱 App should now pass App Store icon validation"
+    else
+        log_error "❌ iOS icon fix failed"
+        log_warning "⚠️ App may fail App Store validation due to missing icons"
+        # Continue anyway as this is not critical for the build
+    fi
+else
+    log_warning "⚠️ iOS icon fix script not found, trying fallback icon fixes..."
+    
+    # Try fallback icon fixes
+    if [ -f "lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh" ]; then
+        chmod +x lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh
+        if ./lib/scripts/ios-workflow/fix_ios_icons_comprehensive.sh; then
+            log_success "✅ Fallback icon fix completed successfully"
+        else
+            log_warning "⚠️ Fallback icon fix failed"
+        fi
+    else
+        log_warning "⚠️ No icon fix scripts found, skipping icon validation"
+        log_warning "⚠️ App may fail App Store validation due to missing icons"
+    fi
+fi
+
 # Fix all iOS permissions for App Store compliance
 log_info "🔐 Step: Fix all iOS permissions for App Store compliance..."
 if [ -f "lib/scripts/ios-workflow/fix_all_permissions.sh" ]; then
@@ -555,6 +587,20 @@ else
     else
         log_warning "⚠️ Speech permissions fix script not found, skipping..."
     fi
+fi
+
+# Test icon fix to verify it worked
+log_info "🧪 Testing icon fix to verify App Store validation readiness..."
+if [ -f "lib/scripts/ios-workflow/test_icon_fix.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/test_icon_fix.sh
+    if ./lib/scripts/ios-workflow/test_icon_fix.sh; then
+        log_success "✅ Icon fix test passed - App Store validation should succeed"
+    else
+        log_warning "⚠️ Icon fix test failed - App Store validation may still fail"
+        log_warning "⚠️ Check the test output above for specific issues"
+    fi
+else
+    log_warning "⚠️ Icon fix test script not found, cannot verify fix"
 fi
 
 # iOS app branding (logo and splash screen)
@@ -1625,6 +1671,21 @@ cat > ios/ExportOptions.plist << EXPORTPLIST
 </dict>
 </plist>
 EXPORTPLIST
+
+# Final icon verification before IPA export
+log_info "🔍 Final icon verification before IPA export..."
+if [ -f "lib/scripts/ios-workflow/test_icon_fix.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/test_icon_fix.sh
+    if ./lib/scripts/ios-workflow/test_icon_fix.sh; then
+        log_success "✅ Final icon verification passed - IPA should pass App Store validation"
+    else
+        log_error "❌ Final icon verification failed - IPA will fail App Store validation"
+        log_warning "⚠️ Check the verification output above for specific issues"
+        log_warning "⚠️ Consider fixing icon issues before proceeding with export"
+    fi
+else
+    log_warning "⚠️ Icon verification script not found, cannot verify icons before export"
+fi
 
 log_info "📤 Exporting IPA..."
 set -x # verbose shell output

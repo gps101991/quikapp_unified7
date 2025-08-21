@@ -13,19 +13,32 @@ log_info() { echo -e "\033[0;34m🔍 $1\033[0m" >&2; }
 
 log_info "Starting comprehensive iOS icon fix..."
 
-# Check if we have a source icon
+# Step 1: Ensure asset catalog directory exists
+log_info "Step 1: Ensuring asset catalog directory structure..."
+mkdir -p ios/Runner/Assets.xcassets/AppIcon.appiconset
+log_success "Asset catalog directory structure ready"
+
+# Step 2: Check and create source icon if missing
 SOURCE_ICON="ios/Runner/Assets.xcassets/AppIcon.appiconset/Icon-App-1024x1024@1x.png"
 if [[ ! -f "$SOURCE_ICON" ]]; then
-    log_error "Source icon not found: $SOURCE_ICON"
-    log_info "Creating placeholder icon..."
+    log_warning "Source icon not found: $SOURCE_ICON"
     
-    # Create a simple placeholder icon if none exists
-    mkdir -p ios/Runner/Assets.xcassets/AppIcon.appiconset
-    # This would need imagemagick or similar tool to generate
-    log_warning "Please ensure you have a 1024x1024 source icon"
+    # Try to find any existing icon to use as source
+    EXISTING_ICONS=($(find ios/Runner/Assets.xcassets/AppIcon.appiconset -name "*.png" 2>/dev/null | head -1))
+    
+    if [[ ${#EXISTING_ICONS[@]} -gt 0 ]] && [[ -f "${EXISTING_ICONS[0]}" ]]; then
+        log_info "Using existing icon as source: ${EXISTING_ICONS[0]}"
+        SOURCE_ICON="${EXISTING_ICONS[0]}"
+    else
+        log_error "No source icon found and no existing icons available"
+        log_info "Please ensure you have a 1024x1024 source icon or any existing icon"
+        exit 1
+    fi
 fi
 
-# Function to generate icon if missing
+log_success "Source icon identified: $SOURCE_ICON"
+
+# Function to generate icon if missing with better error handling
 generate_icon() {
     local size="$1"
     local filename="$2"
@@ -36,24 +49,26 @@ generate_icon() {
         
         # Try to use sips (macOS built-in) to resize
         if command -v sips >/dev/null 2>&1; then
-            sips -z "$size" "$size" "$SOURCE_ICON" --out "$target_path" 2>/dev/null || {
-                log_warning "Failed to generate $filename with sips"
+            if sips -z "$size" "$size" "$SOURCE_ICON" --out "$target_path" 2>/dev/null; then
+                log_success "Generated $filename with sips"
+            else
+                log_warning "sips failed for $filename, trying fallback method"
                 # Copy source icon as fallback
                 cp "$SOURCE_ICON" "$target_path"
-            }
+                log_success "Copied source icon as fallback for $filename"
+            fi
         else
             log_warning "sips not available, copying source icon"
             cp "$SOURCE_ICON" "$target_path"
+            log_success "Copied source icon for $filename"
         fi
-        
-        log_success "Generated $filename"
     else
         log_success "$filename already exists"
     fi
 }
 
-# Step 1: Generate all required icon sizes
-log_info "Step 1: Generating all required icon sizes..."
+# Step 3: Generate all required icon sizes with validation
+log_info "Step 3: Generating all required icon sizes..."
 
 # iPhone icons
 generate_icon "40" "Icon-App-20x20@2x.png"    # 40x40
@@ -73,8 +88,8 @@ generate_icon "167" "Icon-App-83.5x83.5@2x.png" # 167x167 (CRITICAL - missing)
 # Marketing icon
 generate_icon "1024" "Icon-App-1024x1024@1x.png" # 1024x1024
 
-# Step 2: Fix Contents.json with complete icon configuration
-log_info "Step 2: Fixing Contents.json with complete icon configuration..."
+# Step 4: Fix Contents.json with complete icon configuration
+log_info "Step 4: Fixing Contents.json with complete icon configuration..."
 
 cat > "ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" << 'EOF'
 {
@@ -215,8 +230,8 @@ EOF
 
 log_success "Updated Contents.json with complete icon configuration"
 
-# Step 3: Ensure Info.plist has correct CFBundleIconName
-log_info "Step 3: Ensuring Info.plist has correct CFBundleIconName..."
+# Step 5: Ensure Info.plist has correct CFBundleIconName
+log_info "Step 5: Ensuring Info.plist has correct CFBundleIconName..."
 
 # Backup original Info.plist
 cp ios/Runner/Info.plist ios/Runner/Info.plist.backup.icons
@@ -233,8 +248,8 @@ else
     log_info "CFBundleIconName already present in Info.plist"
 fi
 
-# Step 4: Verify all required icons exist
-log_info "Step 4: Verifying all required icons exist..."
+# Step 6: Verify all required icons exist
+log_info "Step 6: Verifying all required icons exist..."
 
 REQUIRED_ICONS=(
     "Icon-App-20x20@1x.png"
@@ -271,8 +286,8 @@ else
     log_success "All required icons are present"
 fi
 
-# Step 5: Validate asset catalog
-log_info "Step 5: Validating asset catalog..."
+# Step 7: Validate asset catalog
+log_info "Step 7: Validating asset catalog..."
 
 # Check if Contents.json is valid
 if plutil -lint "ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" > /dev/null 2>&1; then
@@ -283,8 +298,8 @@ else
     exit 1
 fi
 
-# Step 6: Clean up any duplicate entries in Info.plist
-log_info "Step 6: Cleaning up Info.plist..."
+# Step 8: Clean up any duplicate entries in Info.plist
+log_info "Step 8: Cleaning up Info.plist..."
 
 # Remove duplicate CADisableMinimumFrameDurationOnPhone entries
 sed -i '' '/CADisableMinimumFrameDurationOnPhone/,+1d' ios/Runner/Info.plist
@@ -300,8 +315,8 @@ sed -i '' '/<\/dict>/i\
 
 log_success "Cleaned up Info.plist"
 
-# Step 7: Final validation
-log_info "Step 7: Final validation..."
+# Step 9: Final validation
+log_info "Step 9: Final validation..."
 
 # Validate Info.plist
 if plutil -lint ios/Runner/Info.plist > /dev/null 2>&1; then

@@ -408,6 +408,69 @@ else
     log "⚠️ Version management script not found, skipping..."
 fi
 
+# Step 11.5: Android Icon Fix (CRITICAL for Play Store compliance)
+log "🖼️ Step 11.5: Android Icon Fix for Play Store Compliance..."
+
+# Fix Android icons to prevent Play Store validation errors
+log "Fixing Android icons to prevent Play Store validation errors..."
+if [ -f "lib/scripts/android/fix_android_icons_comprehensive.sh" ]; then
+    chmod +x lib/scripts/android/fix_android_icons_comprehensive.sh
+    if lib/scripts/android/fix_android_icons_comprehensive.sh; then
+        log "✅ Android icon fix completed successfully"
+        log "🤖 App should now pass Play Store icon validation"
+    else
+        log "❌ Android icon fix failed"
+        log "⚠️ App may fail Play Store validation due to missing icons"
+        # Continue anyway as this is not critical for the build
+    fi
+else
+    log "⚠️ Android icon fix script not found, trying fallback icon fixes..."
+
+    # Try fallback icon fixes
+    if [ -f "lib/scripts/android/branding.sh" ]; then
+        chmod +x lib/scripts/android/branding.sh
+        if lib/scripts/android/branding.sh; then
+            log "✅ Fallback branding completed successfully"
+        else
+            log "⚠️ Fallback branding failed"
+        fi
+    else
+        log "⚠️ No icon fix scripts found, skipping icon validation"
+        log "⚠️ App may fail Play Store validation due to missing icons"
+    fi
+fi
+
+# Step 11.6: Android Push Notification Setup (CRITICAL for push notifications)
+log "🔔 Step 11.6: Android Push Notification Setup for Production..."
+
+# Setup Android push notifications to ensure FCM compliance
+log "Setting up Android push notifications for FCM compliance..."
+if [ -f "lib/scripts/android/setup_push_notifications_complete.sh" ]; then
+    chmod +x lib/scripts/android/setup_push_notifications_complete.sh
+    if lib/scripts/android/setup_push_notifications_complete.sh; then
+        log "✅ Android push notification setup completed successfully"
+        log "🔔 App should now support push notifications in all states"
+        
+        # Run validation to confirm setup
+        if [ -f "lib/scripts/android/verify_push_notifications_comprehensive.sh" ]; then
+            log "🔍 Running push notification validation..."
+            chmod +x lib/scripts/android/verify_push_notifications_comprehensive.sh
+            if lib/scripts/android/verify_push_notifications_comprehensive.sh; then
+                log "✅ Push notification validation passed"
+            else
+                log "⚠️ Push notification validation found issues"
+            fi
+        fi
+    else
+        log "❌ Android push notification setup failed"
+        log "⚠️ Push notifications may not work properly"
+        # Continue anyway as this is not critical for the build
+    fi
+else
+    log "⚠️ Android push notification setup script not found"
+    log "⚠️ Push notifications may not work properly"
+fi
+
 # Enhanced asset download with parallel processing
 log "📥 Starting enhanced asset download..."
 if [ -f "lib/scripts/android/branding.sh" ]; then
