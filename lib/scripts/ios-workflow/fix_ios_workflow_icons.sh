@@ -29,35 +29,48 @@ else
     exit 1
 fi
 
-# Step 2: Verify icon configuration
-log_info "Step 2: Verifying icon configuration..."
+# Step 2: Run icon verification
+log_info "Step 2: Running icon verification..."
 
-# Check if all critical icons exist
-CRITICAL_ICONS=(
-    "Icon-App-60x60@2x.png:120x120"
-    "Icon-App-76x76@2x.png:152x152"
-    "Icon-App-83.5x83.5@2x.png:167x167"
-)
-
-MISSING_CRITICAL=()
-for icon_info in "${CRITICAL_ICONS[@]}"; do
-    icon="${icon_info%%:*}"
-    size="${icon_info##*:}"
-    filepath="ios/Runner/Assets.xcassets/AppIcon.appiconset/$icon"
-    
-    if [[ ! -f "$filepath" ]]; then
-        MISSING_CRITICAL+=("$icon ($size)")
+if [ -f "lib/scripts/ios-workflow/verify_icon_fix.sh" ]; then
+    chmod +x lib/scripts/ios-workflow/verify_icon_fix.sh
+    if ./lib/scripts/ios-workflow/verify_icon_fix.sh; then
+        log_success "Icon verification completed successfully"
+    else
+        log_error "Icon verification failed"
+        exit 1
     fi
-done
-
-if [[ ${#MISSING_CRITICAL[@]} -gt 0 ]]; then
-    log_error "Critical icons still missing:"
-    for icon in "${MISSING_CRITICAL[@]}"; do
-        log_error "  - $icon"
-    done
-    exit 1
 else
-    log_success "All critical icons are present"
+    log_warning "Icon verification script not found, running basic checks..."
+    
+    # Basic verification as fallback
+    # Check if all critical icons exist
+    CRITICAL_ICONS=(
+        "Icon-App-60x60@2x.png:120x120"
+        "Icon-App-76x76@2x.png:152x152"
+        "Icon-App-83.5x83.5@2x.png:167x167"
+    )
+
+    MISSING_CRITICAL=()
+    for icon_info in "${CRITICAL_ICONS[@]}"; do
+        icon="${icon_info%%:*}"
+        size="${icon_info##*:}"
+        filepath="ios/Runner/Assets.xcassets/AppIcon.appiconset/$icon"
+        
+        if [[ ! -f "$filepath" ]]; then
+            MISSING_CRITICAL+=("$icon ($size)")
+        fi
+    done
+
+    if [[ ${#MISSING_CRITICAL[@]} -gt 0 ]]; then
+        log_error "Critical icons still missing:"
+        for icon in "${MISSING_CRITICAL[@]}"; do
+            log_error "  - $icon"
+        done
+        exit 1
+    else
+        log_success "All critical icons are present"
+    fi
 fi
 
 # Step 3: Verify Contents.json

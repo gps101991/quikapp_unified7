@@ -246,6 +246,10 @@ if ! grep -q "CFBundleIconName" ios/Runner/Info.plist; then
     log_success "Added CFBundleIconName to Info.plist"
 else
     log_info "CFBundleIconName already present in Info.plist"
+    # Ensure it's set to "AppIcon"
+    sed -i '' 's/<key>CFBundleIconName<\/key>.*/<key>CFBundleIconName<\/key>\
+	<string>AppIcon<\/string>/' ios/Runner/Info.plist
+    log_success "Updated CFBundleIconName to AppIcon"
 fi
 
 # Step 6: Verify all required icons exist
@@ -349,6 +353,61 @@ for size_info in "${CRITICAL_SIZES[@]}"; do
     fi
 done
 
+# Step 10: Force regenerate missing critical icons
+log_info "Step 10: Force regenerating critical icons..."
+
+CRITICAL_ICONS=(
+    "120:Icon-App-60x60@2x.png"
+    "152:Icon-App-76x76@2x.png"
+    "167:Icon-App-83.5x83.5@2x.png"
+)
+
+for icon_info in "${CRITICAL_ICONS[@]}"; do
+    size="${icon_info%%:*}"
+    filename="${icon_info##*:}"
+    filepath="ios/Runner/Assets.xcassets/AppIcon.appiconset/$filename"
+    
+    log_info "Force regenerating $filename ($size x $size)..."
+    
+    # Remove existing file if it exists
+    if [[ -f "$filepath" ]]; then
+        rm "$filepath"
+    fi
+    
+    # Generate new icon
+    if command -v sips >/dev/null 2>&1; then
+        if sips -z "$size" "$size" "$SOURCE_ICON" --out "$filepath" 2>/dev/null; then
+            log_success "✅ Regenerated $filename"
+        else
+            log_error "❌ Failed to regenerate $filename"
+            # Copy source as fallback
+            cp "$SOURCE_ICON" "$filepath"
+            log_warning "⚠️ Copied source icon as fallback for $filename"
+        fi
+    else
+        # Copy source as fallback
+        cp "$SOURCE_ICON" "$filepath"
+        log_warning "⚠️ Copied source icon as fallback for $filename"
+    fi
+done
+
+# Step 11: Final verification
+log_info "Step 11: Final verification..."
+
+# Verify all critical icons exist and have content
+for icon_info in "${CRITICAL_ICONS[@]}"; do
+    size="${icon_info%%:*}"
+    filename="${icon_info##*:}"
+    filepath="ios/Runner/Assets.xcassets/AppIcon.appiconset/$filename"
+    
+    if [[ -f "$filepath" ]] && [[ -s "$filepath" ]]; then
+        log_success "✅ $filename exists and has content"
+    else
+        log_error "❌ $filename missing or empty"
+        exit 1
+    fi
+done
+
 # Summary
 log_info "📋 Icon Fix Summary:"
 echo "=========================================="
@@ -357,6 +416,7 @@ echo "✅ Contents.json updated with complete configuration"
 echo "✅ CFBundleIconName properly set in Info.plist"
 echo "✅ Asset catalog validated"
 echo "✅ Info.plist cleaned and validated"
+echo "✅ Critical icons force regenerated"
 echo "=========================================="
 
 log_success "🎉 Comprehensive iOS icon fix completed successfully!"
